@@ -1,4 +1,4 @@
-name: Deploy site profile to main branch
+name: deploy-to-main
 on:
   push:
     branches:

@@ -1,8 +1,10 @@
 name: Create Release
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["deploy-to-main"]
+    branches: ["dev"]
+    types:
+      - completed
 
 jobs:
   changelog:
