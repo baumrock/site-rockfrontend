@@ -39,4 +39,7 @@ $content = '// Load local configuration if it exists\n' . PHP_EOL
 files()->filePutContents($root . 'site/config.php', $content, FILE_APPEND);
 files()->touch($root . 'site/config-local.php');
 
+// remove remaining site-blank profile
+files()->rmdir($root . "site-blank", true);
+
 $installer->ok('Finished installing site profile');
