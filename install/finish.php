@@ -33,7 +33,9 @@ files()->copy($src, $root);
 files()->rmdir($src, true);
 
 // add a line to the config.php file that loads config-local.php
-$content = "\n/** Load local configuration file if it exists **/\nif(file_exists(__DIR__ . '/config-local.php')) include(__DIR__ . '/config-local.php');";
+$content = '// Load local configuration if it exists\n' . PHP_EOL
+  . '$localConfig = __DIR__ . "/config-local.php";' . PHP_EOL
+  . 'if (is_file($localConfig)) include $localConfig;';
 files()->filePutContents($root . 'site/config.php', $content, FILE_APPEND);
 files()->touch($root . 'site/config-local.php');
 
