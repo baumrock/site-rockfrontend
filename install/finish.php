@@ -28,8 +28,13 @@ if (!defined("PROCESSWIRE_INSTALL")) die();
 
 // copy files from root assets folder into pw root directory
 $root = paths()->root;
-$src = $root . "site/assets/root";
+$src = $root . 'site/assets/root';
 files()->copy($src, $root);
 files()->rmdir($src, true);
+
+// add a line to the config.php file that loads config-local.php
+$content = "\n/** Load local configuration file if it exists **/\nif(file_exists(__DIR__ . '/config-local.php')) include(__DIR__ . '/config-local.php');";
+files()->filePutContents($root . 'site/config.php', $content, FILE_APPEND);
+files()->touch($root . 'site/config-local.php');
 
 $installer->ok('Finished installing site profile');
