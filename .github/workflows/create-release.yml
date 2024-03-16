@@ -2,7 +2,6 @@ name: Create Release
 on:
   workflow_run:
     workflows: ["deploy-to-main"]
-    branches: ["dev"]
     types:
       - completed
 
