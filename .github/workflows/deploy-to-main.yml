@@ -1,4 +1,4 @@
-name: deploy-to-main
+name: Deploy to main
 on:
   push:
     branches:
@@ -6,7 +6,6 @@ on:
 
 jobs:
   deploy:
-    name: Deploy site profile to main branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
