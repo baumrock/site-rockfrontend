@@ -1,3 +1,0 @@
-// tpl and prefix constant
-const tpl = "$1";
-const prefix = "$1_";
