@@ -1,2 +1,0 @@
-// add variable typehint
-/** @var $1 $$2 */

@@ -1,3 +1,0 @@
-# Roadmap
-
-- improve watch() feature

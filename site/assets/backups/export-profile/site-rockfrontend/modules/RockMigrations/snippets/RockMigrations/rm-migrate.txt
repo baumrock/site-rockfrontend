@@ -1,5 +1,0 @@
-// rm-migrate
-\$rm->migrate([
-  'fields' => [],
-  'templates' => [],
-]);
