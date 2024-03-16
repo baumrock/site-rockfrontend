@@ -1,0 +1,20 @@
+name: Deploy site profile to main branch
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: Deploy site profile to main branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Deploy
+        uses: s0/git-publish-subdir-action@develop
+        env:
+          REPO: self
+          BRANCH: main
+          FOLDER: site/assets/backups/export-profile/site-rockfrontend
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}

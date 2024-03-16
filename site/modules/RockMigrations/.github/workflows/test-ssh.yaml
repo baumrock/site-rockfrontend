@@ -1,0 +1,27 @@
+name: Test SSH Connection
+
+on:
+  workflow_call:
+    inputs:
+      SSH_HOST:
+        type: string
+        required: true
+      SSH_USER:
+        type: string
+        required: true
+    secrets:
+      SSH_KEY:
+        required: true
+      KNOWN_HOSTS:
+        required: true
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          ssh ${{ inputs.SSH_USER }}@${{ inputs.SSH_HOST }} -p22 "pwd"

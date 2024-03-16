@@ -1,0 +1,65 @@
+// RockStyle v1.1
+
+// ##############################################################
+// theme variables to easily style this theme
+// use these variables in /site/templates/admin.less to customize
+@rock-primary: #1c9e68;
+// ##############################################################
+
+// link theme variable to uikit variables
+@global-primary-background: @rock-primary;
+@global-link-color: @rock-primary;
+@global-link-hover-color: lighten(@rock-primary, 5%);
+@base-selection-background: @rock-primary;
+
+// primary alert should be neutral grey instead of primary color
+// this prevents red primary alert when rock-primary color is red
+// which would be confusing as it would be the same for error messages!
+// see https://i.imgur.com/dxhDz81.png
+@alert-primary-background: @global-muted-background;
+@alert-primary-color: @global-color;
+
+/* ##### UIkit ##### */
+
+// fix tooltip issue
+.uk-tooltip-inner {
+  overflow-wrap: break-word;
+}
+
+/* ##### ProcessWire ##### */
+
+// remove padding from tabs in page edit screen
+.uk-tab > * {
+  padding-left: 0;
+}
+
+// notes
+p.notes {
+  .uk-background-muted;
+  padding-left: 5px;
+  border-left: 3px solid @global-secondary-background;
+}
+
+// buttons
+button.ui-button.ui-priority-secondary {
+  background-color: lighten(@global-color, 20%) !important;
+}
+
+// vex dialogs
+.vex-dialog-button.vex-dialog-button-primary {
+  background: @global-primary-background !important;
+}
+
+// notices
+// remove spacing: https://i.imgur.com/l6TJIIJ.png
+.pw-notices,
+.pw-notices li {
+  margin: 0;
+}
+.pw-notices {
+  margin-top: -2px;
+}
+// make notification bug darker to stand out from masthead
+#NotificationBug {
+  background-color: @global-color;
+}

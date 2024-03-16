@@ -1,0 +1,21 @@
+{
+  "name": "baumrock/rockmigrations",
+  "type": "processwire-module",
+  "license": "MIT",
+  "extra": {
+    "installer-name": "RockMigrations"
+  },
+  "require": {
+    "composer/installers": "~1.0",
+    "symfony/yaml": "^5.4",
+    "matthiasmullie/minify": "^1.3"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    },
+    "platform": {
+      "php": "8.0"
+    }
+  }
+}
