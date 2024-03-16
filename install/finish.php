@@ -37,7 +37,7 @@ $content = '// Load local configuration if it exists\n' . PHP_EOL
   . '$localConfig = __DIR__ . "/config-local.php";' . PHP_EOL
   . 'if (is_file($localConfig)) include $localConfig;';
 files()->filePutContents($root . 'site/config.php', $content, FILE_APPEND);
-files()->touch($root . 'site/config-local.php');
+files()->filePutContents($root . 'site/config-local.php', '');
 
 // remove remaining site-blank profile
 files()->rmdir($root . "site-blank", true);
