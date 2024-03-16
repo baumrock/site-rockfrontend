@@ -1,0 +1,48 @@
+@rf-boxed-outer: 1920px;
+@rf-boxed: 1440px;
+@rf-boxed-padding: 20px; // inner box padding
+@rfgrow-min: 375px;
+
+// mobile padding of inner box
+// adjust to fit your inner box width
+.rf-boxed-padding {
+  padding-left: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+  padding-right: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+}
+
+// boxed container
+.rf-boxed-outer {
+  // outline: 2px solid blue;
+  width: 100%;
+  max-width: @rf-boxed-outer;
+  margin-left: auto;
+  margin-right: auto;
+}
+.rf-boxed {
+  // outline: 2px solid red;
+  width: 100%;
+  max-width: @rf-boxed;
+  // max-width: rfGrow(@rf-boxed, 1800px, @rf-boxed, @rf-boxed);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+// new version that does not need nested divs
+// use this instead of rf-boxed + rf-boxed-padding
+.rf-box {
+  // outline: 2px solid red;
+
+  // use content box to apply max-width only to content
+  box-sizing: content-box;
+  max-width: @rf-boxed;
+  // max-width: rfGrow(@rf-boxed, 1800px, @rf-boxed, @rf-boxed);
+
+  // center the box
+  margin-left: auto;
+  margin-right: auto;
+
+  // apply paddings
+  padding-left: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+  padding-right: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+}
