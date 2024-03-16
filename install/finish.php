@@ -25,9 +25,11 @@ if (!defined("PROCESSWIRE_INSTALL")) die();
 /** @var ProcessWire $wire */
 /** @var Pages $pages */
 /** @var User $user */
-// …and so on for other API variables
 
+// copy files from root assets folder into pw root directory
 $root = paths()->root;
-files()->copy($root . "site/assets/root", $root);
+$src = $root . "site/assets/root";
+files()->copy($src, $root);
+files()->rmdir($src, true);
 
 $installer->ok('Finished installing site profile');
