@@ -12,10 +12,10 @@ $rf->styles()
   ->add('/site/templates/bundle/tailwind.css')
   ->add('/site/templates/uikit/src/less/uikit.theme.less')
   ->addDefaultFolders()
-  ->minify(true);
+  ->minify($config->debug ? false : true);
 
 $rf->scripts()
   ->add('/site/templates/uikit/dist/js/uikit.min.js')
   ->add('/site/templates/scripts/main.js', 'defer')
   ->add('/site/modules/RockCommerce/RockCommerceSite.min.js', 'defer')
-  ->minify(true);
+  ->minify($config->debug ? false : true);

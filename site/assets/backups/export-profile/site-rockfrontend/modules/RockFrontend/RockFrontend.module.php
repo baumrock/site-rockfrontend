@@ -125,10 +125,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public $remBase;
 
+  private $scripts;
+
   /** @var Seo */
   public $seo;
 
-  private $scripts;
+  private $sitemapCallback;
+
   private $styles;
 
   /** @var array */
@@ -2285,6 +2288,81 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Create a sitemap.xml file with a simple callback
+   * @return void
+   */
+  public function sitemap($callback = null, $options = []): void
+  {
+    if (!$callback) $callback = function (Page $page) {
+      return $page;
+    };
+    $this->sitemapCallback = $callback;
+    wire()->addHookAfter("/sitemap.xml", $this, "sitemapRender");
+    wire()->addHookAfter("Modules::refresh", $this, "sitemapReset");
+    wire()->addHookAfter("Pages::saved", $this, "sitemapReset");
+  }
+
+  protected function sitemapRender()
+  {
+    // make sure to render the sitemap as seen by the guest user
+    $this->wire->user = $this->wire->users->get('guest');
+    $time = Debug::startTimer();
+    $count = 0;
+
+    // create markup
+    $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
+    $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
+
+    // recursive function to traverse the page tree
+    $f = function ($items = null) use (&$f, &$out, &$count) {
+      if (!$items) $items = wire()->pages->get(1);
+      if ($items instanceof Page) $items = [$items];
+      foreach ($items as $p) {
+        /** @var Page $p */
+        if (!$p->viewable()) continue;
+        $callback = $this->sitemapCallback;
+        $result = $callback($p);
+        if ($result === false) {
+          // don't traverse further down the tree
+          return;
+        } elseif ($result instanceof Page) {
+          // if a page is returned we create a basic default markup
+          $modified = date("Y-m-d", $result->modified);
+          $out .= "<url>\n"
+            . "<loc>{$result->httpUrl()}</loc>\n"
+            . "<lastmod>$modified</lastmod>\n"
+            . "</url>\n";
+        } elseif ($result) {
+          // custom markup returned - add it to output
+          $out .= "$result\n";
+        }
+        $count++;
+        $f($p->children("include=hidden"));
+      }
+    };
+    $f();
+    $out .= '</urlset>';
+
+    // create sitemap.xml file
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    $this->wire->files->filePutContents($file, $out);
+
+    $seconds = Debug::stopTimer($time);
+    $this->log("Sitemap showing $count pages generated in " . round($seconds * 1000) . " ms", [
+      'url' => '/sitemap.xml',
+    ]);
+
+    header('Content-Type: application/xml');
+    return $out;
+  }
+
+  protected function sitemapReset(HookEvent $event): void
+  {
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    if (is_file($file)) wire()->files->unlink($file);
+  }
+
+  /**
    * Get given StylesArray instance or a new one if no name is provided
    *
    * Usage:
@@ -2543,6 +2621,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $config = $this->wire->config;
     $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
+    $this->configSEO($inputfields);
     $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
     $this->configSettings($inputfields);
@@ -2553,16 +2632,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function configLatte(InputfieldWrapper $inputfields): void
   {
-    $hasLatteFiles = $this->wire->files->find(
-      $this->wire->config->paths->templates,
-      ['extensions' => ['latte']]
-    );
     $fs = new InputfieldFieldset();
     $fs->label = "Latte";
     $fs->icon = "code";
-    $fs->collapsed = $hasLatteFiles
-      ? Inputfield::collapsedNo
-      : Inputfield::collapsedYes;
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $f = new InputfieldCheckbox();
@@ -2599,6 +2672,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "LiveReload";
     $fs->icon = "refresh";
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $f = new InputfieldMarkup();
@@ -2637,11 +2711,83 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
   }
 
+  private function configSEO($inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "SEO";
+    $fs->icon = "search";
+    $fs->collapsed = Inputfield::collapsedYesAjax;
+    $inputfields->add($fs);
+    $root = $this->wire->config->paths->root;
+    $warn = '<svg style="color:#F9A825" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9-3v4m0 3v.01"/></svg>';
+    $check = '<svg style="color:#388E3C" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/></g></svg>';
+
+    if ($this->wire->config->ajax) {
+      $http = new WireHttp();
+
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'robots.txt',
+        'value' => is_file($root . "robots.txt")
+          ? "$check robots.txt is present"
+          : "$warn no robots.txt in site root",
+        'columnWidth' => 50,
+      ]);
+
+      $hasSitemap = $http->status(
+        $this->wire->pages->get(1)->httpUrl() . "sitemap.xml"
+      );
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'sitemap.xml',
+        'value' => $hasSitemap
+          ? "$check sitemap.xml was found"
+          : "$warn no sitemap.xml in site root",
+        'notes' => is_file($root . "sitemap.xml")
+          ? ''
+          : 'See [docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/seo/).',
+        'columnWidth' => 50,
+      ]);
+
+      $markup = $http->get($this->wire->pages->get(1)->httpUrl());
+      $url = $http->getResponseHeaders('location') ?: '/';
+      $dom = rockfrontend()->dom($markup);
+      $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
+      $minifyWarning = strpos($markup, "property=og:image") === false
+        ? "" : "It looks like you are using ProCache's remove quotes from tag attributes feature - this feature will break WhatsApp preview images on Android! See [this forum post](https://processwire.com/talk/topic/29831-why-does-whatsapp-not-show-a-preview-image-for-my-site/?do=findComment&comment=240133)";
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'og:image',
+        'value' => $ogimg
+          ? "$check og:image tag found on page $url"
+          : "$warn no og:image tag on page $url",
+        'columnWidth' => 50,
+        'notes' => $minifyWarning,
+      ]);
+
+      $hasFavicon = $http->status(
+        $this->wire->pages->get(1)->httpUrl() . "favicon.ico"
+      );
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'favicon.ico',
+        'value' => $hasFavicon
+          ? "$check favicon.ico was found"
+          : "$warn no favicon.ico in site root",
+        'notes' => $hasFavicon
+          ? ''
+          : 'Use [realfavicongenerator](https://realfavicongenerator.net/) to add a favicon to your site.',
+        'columnWidth' => 50,
+      ]);
+    }
+  }
+
   private function configSettings($inputfields)
   {
     $fs = new InputfieldFieldset();
     $fs->label = "Settings";
     $fs->icon = "cogs";
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $fs->add([
@@ -2695,6 +2841,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "Tools";
     $fs->icon = "wrench";
+    $fs->collapsed = Inputfield::collapsedYes;
 
     $this->manifestConfig($fs);
 
