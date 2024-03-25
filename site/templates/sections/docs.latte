@@ -1,7 +1,7 @@
 {* docs for the site profile
 you can remove this file after installation *}
 <section
-  n:if="is_file($config->paths->root.'tailwind.config.js')"
+  n:if="!is_file($config->paths->root.'tailwind.config.js')"
   class="uk-alert uk-alert-warning"
   style="color: #FF6F00"
 >
