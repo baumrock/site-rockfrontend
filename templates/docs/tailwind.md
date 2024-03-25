@@ -2,6 +2,8 @@
 
 Note: Please read the basics about RockFrontend first, then proceed below!
 
+<div class=uk-alert>If you don't want to use TailwindCSS simply don't install it! The Profile will work without it just as well :)</div>
+
 ## Why Tailwind CSS?
 
 Tailwind CSS offers a unique advantage when it comes to customizing your design, especially when used in conjunction with UIkit. A common challenge with UIkit is its limited customization options for certain components, such as the grid's gutter sizes. Typically, you're restricted to small, medium, or large options. If your design requires a more specific size, you would need to create a `.less` file, identify the correct selector, and manually set properties like `gap: 12px`. This process is not only tedious but can also lead to difficulties in maintaining your code.
@@ -12,7 +14,7 @@ Another significant advantage of combining Tailwind CSS with UIkit is the reduct
 
 ## Setup
 
-Foo bar
+Tailwind is not enabled by default - you need to install it via RockFrontends module config screen (in the ProcessWire backend search "RockFrontend" and see the section about TailwindCSS).
 
 ## Caveats
 
