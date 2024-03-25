@@ -11,7 +11,7 @@
  * them into this file in order to modify them.
  *
  * ProcessWire 
- * Copyright (C) 2021 by Ryan Cramer
+ * Copyright (C) 2024 by Ryan Cramer
  * Licensed under MPL 2.0
  *
  * https://processwire.com
@@ -34,7 +34,7 @@ if(!defined("PROCESSWIRE")) die();
  * @var bool
  *
  */
-$config->debug = true;
+$config->debug = false;
 
 $config->useFunctionsAPI = true;
 $config->usePageClasses = true;
@@ -46,5 +46,3 @@ $config->defaultAdminTheme = 'AdminThemeUikit';
 
 
 /*** INSTALLER CONFIG ********************************************************************/
-
-
