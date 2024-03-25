@@ -544,13 +544,4 @@ video {
   --tw-backdrop-sepia:  ;
 }
 
-.global-section {
-  --tw-bg-opacity: 1;
-  background-color: rgb(239 68 68 / var(--tw-bg-opacity));
-  padding-top: 2.5rem;
-  padding-bottom: 2.5rem;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity));
-}
+/* here you can add custom tailwind compound classes via apply */

@@ -1,0 +1,4 @@
+@tailwind base;
+@tailwind utilities;
+
+/* here you can add custom tailwind compound classes via apply */
