@@ -1,0 +1,35 @@
+/**
+ * Styles for the Site Profile Docs
+ * Remove them after installation
+ */
+.tm-prose {
+  h1 {
+    .uk-h1;
+  }
+  h2 {
+    .uk-h2;
+  }
+  p,
+  ul {
+    margin-bottom: @margin-small-margin;
+  }
+  :not(pre) > code,
+  :not(pre) > kbd,
+  :not(pre) > samp {
+    color: @global-color;
+  }
+  ul {
+    list-style-type: disc;
+    margin-left: 20px;
+  }
+  a {
+    color: @global-primary-background;
+    text-decoration: underline;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+  pre {
+    background-color: @global-muted-background;
+  }
+}

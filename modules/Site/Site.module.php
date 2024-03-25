@@ -87,15 +87,6 @@ class Site extends WireData implements Module
     // convert markdown into html markup
     $md = $this->wire->modules->get('TextformatterMarkdownExtra');
     $md->format($str);
-
-    // adjust markup via dom-tools
-    $dom = rockfrontend()->dom($str);
-    $dom->filter("h1")->each(
-      function (HtmlPageCrawler $node) {
-        $node->addClass("uk-h1");
-      }
-    );
-
-    return rockfrontend()->html($dom->getInnerHtml());
+    return rockfrontend()->html($str);
   }
 }
