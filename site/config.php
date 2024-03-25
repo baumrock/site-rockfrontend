@@ -10,9 +10,9 @@ if (!defined("PROCESSWIRE")) die();
 
 $config->useFunctionsAPI = true;
 $config->usePageClasses = true;
-$config->useMarkupRegions = true;
+$config->useMarkupRegions = false;
 $config->prependTemplateFile = '_init.php';
-$config->appendTemplateFile = '_main.php';
+$config->appendTemplateFile = '_rockfrontend.php';
 $config->templateCompile = false;
 
 /*** INSTALLER CONFIG ********************************************************************/

@@ -1,3 +1,3 @@
-# site-rockfrontend
+# RockFrontend Site Profile
 
-ProcessWire Site Profile for quickly setting up new Websites with RockFrontend + UIkit + TailwindCSS
+This ProcessWire site profile offers a streamlined solution for setting up a new website by integrating the power of UIkit, Tailwind CSS, and RockFrontend. It provides a robust foundation for developers looking to leverage the flexibility of UIkit and Tailwind CSS for responsive design and utility-first styling, alongside RockFrontend for an enhanced front-end development experience. This profile is ideal for those seeking a modern, efficient, and customizable starting point for their web projects, combining the best of component-driven and utility-first design approaches.
