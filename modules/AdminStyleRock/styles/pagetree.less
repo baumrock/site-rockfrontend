@@ -1,0 +1,154 @@
+@rock-padding-y: 7px; // defines the line-height of pagelist items
+@rock-pagelist-color: @rock-gray-800; // pagelist item color
+@rock-special-opacity: 0.9; // opacity of special pages (hidden/unpub)
+@rock-pagestatus-opacity: 0.5; // opacity of status indicator icons of special pages (hidden/unpub)
+
+// page list item color
+.PageList .PageListItem > a.PageListPage {
+  color: @rock-pagelist-color;
+  font-weight: normal;
+}
+.PageList .PageListItemOpen > a.PageListPage {
+  color: @rock-pagelist-color;
+  font-weight: normal;
+}
+.PageList .PageListTriggerOpen > a.PageListPage {
+  color: @rock-pagelist-color;
+  font-weight: normal;
+}
+.PageList .PageListItem > a.PageListPage:hover,
+.PageList .PageListItem.PageListItemHover > a.PageListPage {
+  color: black !important;
+  text-decoration: none;
+}
+.PageListItem.PageListHasChildren > a.PageListPage:before {
+  color: @rock-pagelist-color !important;
+}
+
+// pagelist action buttons
+.PageList .PageListActions a {
+  background-color: @rock-gray-700;
+}
+.PageList .PageListActions a:hover {
+  background-color: darken(@rock-primary, 20%);
+}
+.PageList .PageListActions li.PageListActionEdit a {
+  background-color: darken(@rock-primary, 10%);
+}
+.PageList .PageListMoveNote a {
+  background-color: darken(@rock-primary, 10%);
+  &:hover {
+    background-color: darken(@rock-primary, 20%);
+  }
+}
+
+// style of pagelist items (lines)
+.PageList .PageListItem {
+  border-bottom: none;
+  border-bottom-width: 0;
+
+  // add padding to anchor elements (better hover actions)
+  > a {
+    display: inline-block;
+    padding-top: @rock-padding-y;
+    padding-bottom: @rock-padding-y;
+  }
+}
+.PageList .PageListItem:not(.PageListID1):not(.PageListPlaceholderItem) {
+  border-bottom: none;
+  border-top: none;
+  padding: 0;
+  padding-left: 10px;
+  margin-top: 0px;
+  border-left: 2px solid @rock-gray-300;
+  margin-left: 4px;
+}
+.PageListItem:hover:not(.PageListID1):not(.PageListPlaceholderItem) {
+  border-left: 2px solid @rock-gray-500;
+}
+
+// special pages: hidden/unpublished
+.PageListStatusHidden,
+.PageListStatusUnpublished,
+.PageListStatusHidden:hover {
+  // text opacity
+  a.PageListPage.label {
+    opacity: @rock-special-opacity !important;
+  }
+  // line style
+  background-color: @rock-gray-100 !important;
+  font-style: italic;
+}
+.PageListStatusSystem,
+.PageListStatusSystem:hover {
+  // light muted background
+  background-color: @rock-gray-100 !important;
+}
+.PageListID1,
+.PageListID1:hover {
+  // no background on root page
+  background-color: transparent !important;
+}
+.PageList .PageListStatusUnpublished a.PageListPage > span,
+.PageList .PageListStatusUnpublished a.PageListPage {
+  // no strikethrough etc
+  text-decoration: none !important;
+}
+
+// page status indicators
+.PageListItem::before {
+  display: inline-block;
+  content: "--\f06e";
+  font-family: fontAwesome;
+  margin-right: 0.5rem;
+  margin-left: -0.7rem;
+  margin-bottom: 0.25rem;
+  color: green;
+}
+.PageListStatusHidden::before {
+  display: inline-block;
+  content: "--\f070";
+  font-family: fontAwesome;
+  margin-right: 0.5rem;
+  margin-left: -0.7rem;
+  margin-bottom: 0.25rem;
+  color: orange;
+  opacity: @rock-pagestatus-opacity;
+}
+.PageListStatusUnpublished::before {
+  display: inline-block;
+  content: "--\f00d";
+  font-family: fontAwesome;
+  margin-right: 0.5rem;
+  margin-left: -0.7rem;
+  margin-bottom: 0.25rem;
+  color: red;
+  opacity: @rock-pagestatus-opacity;
+}
+
+// no page status on root page
+.PageListID1::before {
+  display: inline-block;
+  content: "";
+}
+
+// moving/sorting improvements
+.PageListPlaceholderItem::before {
+  // no status-indicator
+  content: "";
+}
+.PageListSortPlaceholder {
+  // align left border with other pagelist items
+  margin-left: 4px;
+  border-left: 2px solid @rock-gray-700 !important;
+}
+.PageListPlaceholder {
+  height: 10px;
+  outline: 1px dashed @rock-gray-300;
+  margin-top: -4px !important;
+}
+
+// alignment of root children
+.PageListRoot > .PageList > .PageList {
+  margin-left: 0;
+}
