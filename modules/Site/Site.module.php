@@ -76,11 +76,13 @@ class Site extends WireData implements Module
    */
   public function renderDocs(Page $page)
   {
-    $readme = $this->wire->config->paths->templates . "docs/{$page->name}.md";
-    $str = "";
-    if (is_file($readme)) {
-      $str = $this->wire->files->fileGetContents($readme);
-    }
+    $name = $page->name;
+    if ($name == "home") $name = "readme";
+    $readme = $this->wire->config->paths->templates . "docs/$name.md";
+
+    $str = is_file($readme)
+      ? $this->wire->files->fileGetContents($readme)
+      : "";
 
     // convert markdown into html markup
     $md = $this->wire->modules->get('TextformatterMarkdownExtra');
