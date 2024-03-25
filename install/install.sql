@@ -1,4 +1,4 @@
-# --- WireDatabaseBackup {"time":"2024-03-25 12:29:53","user":"","dbName":"db","description":"","tables":[],"excludeTables":["pages_drafts","pages_roles","permissions","roles","roles_permissions","users","users_roles","user","role","permission"],"excludeCreateTables":[],"excludeExportTables":["field_roles","field_permissions","field_email","field_pass","caches","session_login_throttle","page_path_history"]}
+# --- WireDatabaseBackup {"time":"2024-03-25 13:30:36","user":"","dbName":"db","description":"","tables":[],"excludeTables":["pages_drafts","pages_roles","permissions","roles","roles_permissions","users","users_roles","user","role","permission"],"excludeCreateTables":[],"excludeExportTables":["field_roles","field_permissions","field_email","field_pass","caches","session_login_throttle","page_path_history"]}
 
 DROP TABLE IF EXISTS `caches`;
 CREATE TABLE `caches` (
@@ -139,10 +139,10 @@ INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1013', 'Can view system l
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1014', 'Can manage system logs');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1016', 'Is allowed to use ALFRED frontend editing');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1017', 'Upgrades');
-INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1018', 'foo');
-INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1019', 'bar');
-INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1020', 'baz');
+INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1018', 'UIkit');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1021', 'Adminer');
+INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1022', 'TailwindCSS');
+INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1023', 'RockFrontend');
 
 DROP TABLE IF EXISTS `fieldgroups`;
 CREATE TABLE `fieldgroups` (
@@ -335,13 +335,13 @@ CREATE TABLE `pages` (
   KEY `created` (`created`),
   KEY `status` (`status`),
   KEY `published` (`published`)
-) ENGINE=MyISAM AUTO_INCREMENT=1022 DEFAULT CHARSET=utf8 COLLATE=utf8mb4_general_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=1024 DEFAULT CHARSET=utf8 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1', '0', '1', 'home', '9', '2024-03-25 12:03:59', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('2', '1', '2', 'cms', '1035', '2024-03-25 11:41:50', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '6');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1', '0', '1', 'home', '9', '2024-03-25 13:28:53', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('2', '1', '2', 'cms', '1035', '2024-03-25 11:41:50', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '7');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('3', '2', '2', 'page', '21', '2024-03-25 11:19:14', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('6', '3', '2', 'add', '21', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '1');
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('7', '1', '2', 'trash', '1039', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '7');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('7', '1', '2', 'trash', '1039', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '8');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('8', '3', '2', 'list', '21', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('9', '3', '2', 'sort', '1047', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '3');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('10', '3', '2', 'edit', '1045', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '4');
@@ -382,10 +382,10 @@ INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modif
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1014', '31', '5', 'logs-edit', '1', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:52', '12');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1016', '31', '5', 'rockfrontend-alfred', '1', '2024-03-16 12:21:07', '41', '2024-03-16 12:21:07', '41', '2024-03-16 12:21:07', '13');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1017', '22', '2', 'upgrades', '1', '2024-03-24 15:06:03', '41', '2024-03-24 15:06:03', '41', '2024-03-24 15:06:03', '4');
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1018', '1', '29', 'foo', '1', '2024-03-25 11:53:30', '41', '2024-03-24 15:51:01', '41', '2024-03-24 15:51:01', '3');
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1019', '1', '29', 'bar', '1', '2024-03-25 11:51:13', '41', '2024-03-24 15:51:03', '41', '2024-03-25 11:38:52', '4');
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1020', '1', '29', 'baz', '2049', '2024-03-25 12:03:59', '41', '2024-03-24 15:51:06', '41', '2024-03-24 15:51:06', '5');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1018', '1', '29', 'uikit', '1', '2024-03-25 12:39:29', '41', '2024-03-24 15:51:01', '41', '2024-03-24 15:51:01', '4');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1021', '22', '2', 'adminer', '1', '2024-03-24 16:15:08', '41', '2024-03-24 16:15:08', '41', '2024-03-24 16:15:08', '5');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1022', '1', '29', 'tailwind', '1', '2024-03-25 13:07:42', '41', '2024-03-25 13:07:38', '41', '2024-03-25 13:07:38', '5');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1023', '1', '29', 'rockfrontend', '1', '2024-03-25 13:28:53', '41', '2024-03-25 13:28:42', '41', '2024-03-25 13:28:42', '3');
 
 DROP TABLE IF EXISTS `pages_access`;
 CREATE TABLE `pages_access` (
@@ -414,8 +414,8 @@ INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1013', '2'
 INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1014', '2', '2024-03-16 10:17:52');
 INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1016', '2', '2024-03-16 12:21:07');
 INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1018', '1', '2024-03-24 15:51:01');
-INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1019', '1', '2024-03-25 10:47:22');
-INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1020', '1', '2024-03-25 10:50:17');
+INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1022', '1', '2024-03-25 13:07:38');
+INSERT INTO `pages_access` (`pages_id`, `templates_id`, `ts`) VALUES('1023', '1', '2024-03-25 13:28:42');
 
 DROP TABLE IF EXISTS `pages_parents`;
 CREATE TABLE `pages_parents` (
@@ -442,8 +442,6 @@ INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('30', '28');
 INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('31', '1');
 INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('31', '2');
 INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('31', '28');
-INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('1019', '1');
-INSERT INTO `pages_parents` (`pages_id`, `parents_id`) VALUES('1020', '1');
 
 DROP TABLE IF EXISTS `pages_sortfields`;
 CREATE TABLE `pages_sortfields` (
@@ -483,4 +481,4 @@ INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, 
 
 UPDATE pages SET created_users_id=41, modified_users_id=41, created=NOW(), modified=NOW();
 
-# --- /WireDatabaseBackup {"numTables":12,"numCreateTables":18,"numInserts":291,"numSeconds":0}
+# --- /WireDatabaseBackup {"numTables":12,"numCreateTables":18,"numInserts":289,"numSeconds":0}
