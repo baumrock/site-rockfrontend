@@ -1,3 +1,30 @@
+## [3.13.1](https://github.com/baumrock/RockFrontend/compare/v3.13.0...v3.13.1) (2024-04-03)
+
+
+### Bug Fixes
+
+* hide topbar on formbuilder iframes ([168c223](https://github.com/baumrock/RockFrontend/commit/168c223bb7fbe49a90c7a2faf78fbf1e7df56738))
+
+## [3.13.0](https://github.com/baumrock/RockFrontend/compare/v3.12.0...v3.13.0) (2024-04-02)
+
+
+### Features
+
+* add basic seo checks on config screen ([4d26c73](https://github.com/baumrock/RockFrontend/commit/4d26c730ef65d2cfb0bb893b80b5f24031c24d10))
+* add check for favicon ([203c833](https://github.com/baumrock/RockFrontend/commit/203c83379286080079416b6d59785274bdfcd20a))
+* add debug info for sitemap.xml generation ([e030f26](https://github.com/baumrock/RockFrontend/commit/e030f26fe00b78f69e045ee6162c4ef5fe7b8a0d))
+* add ogimage minify warning ([1bbfd4a](https://github.com/baumrock/RockFrontend/commit/1bbfd4a4e65cdf1249a61c0b90c0dcfcadf13d94))
+* add sitemap() method 😍 ([600bb32](https://github.com/baumrock/RockFrontend/commit/600bb320939371c1e678e09719431478feffbddf))
+* add tailwind config installation option ([0edcc00](https://github.com/baumrock/RockFrontend/commit/0edcc00951ceab918f22a40b4d5949a2eed34630))
+* detect htmx requests ([93a6181](https://github.com/baumrock/RockFrontend/commit/93a6181195a1973964391058fba5c481d692b073))
+* improve asset minification features ([d3a07ba](https://github.com/baumrock/RockFrontend/commit/d3a07ba18816f11cb82c049d05133f4d08e313f0))
+* load layout.less if it exists ([c8f2876](https://github.com/baumrock/RockFrontend/commit/c8f2876892d2ca037dddf71b7b8da1841ee0bcde))
+
+
+### Bug Fixes
+
+* remove migrations from module config to prevent auto-install of RockMigrations ([614dd46](https://github.com/baumrock/RockFrontend/commit/614dd46868944318ee8cb92052c131697528502c))
+
 ## [3.12.0](https://github.com/baumrock/RockFrontend/compare/v3.11.0...v3.12.0) (2024-03-12)
 
 
@@ -52,31 +79,4 @@
 * don't create manifest by default ([1b17b86](https://github.com/baumrock/RockFrontend/commit/1b17b862c34133fb67a29373ccf1e82198a917d3))
 * fix debugInfo throwing error if folders are null ([c69a79e](https://github.com/baumrock/RockFrontend/commit/c69a79e382d51b2bdc3697886a6a35fc6567aabb))
 * prevent loading AutoPrepend on non-templatefile render() calls ([0eeb184](https://github.com/baumrock/RockFrontend/commit/0eeb1840e2eade6f27e9ebbfb4a378b7374324e4))
-
-## [3.9.0](https://github.com/baumrock/RockFrontend/compare/v3.8.2...v3.9.0) (2024-01-03)
-
-
-### Features
-
-* add humandates via composer ([eabbe8b](https://github.com/baumrock/RockFrontend/commit/eabbe8b2b4d9ece590ec5a30ae6b26f9afe1986c))
-* add ogImage shortcut ([2131298](https://github.com/baumrock/RockFrontend/commit/2131298635b09fcefed49fbbbdc1ba4def265a28))
-* add rockfrontend() functions api ([4991da5](https://github.com/baumrock/RockFrontend/commit/4991da52481f11d79df9e90a7635b03f7ad64e87))
-* add setViewFolders to support RockCommerce HTMX ([dc33123](https://github.com/baumrock/RockFrontend/commit/dc3312329ba620a3008e77fd2117b726c9efbe2a))
-* add variables array to view() method ([c98ee66](https://github.com/baumrock/RockFrontend/commit/c98ee667712de44bd697fade8a93dc0a40042a81))
-* improve view() method for rockcommerce ([c05576a](https://github.com/baumrock/RockFrontend/commit/c05576a3393c277d4d143938e0ac519e6df4ec6a))
-* update dependencies (requires PHP8.1) ([488e689](https://github.com/baumrock/RockFrontend/commit/488e68937c5356504b39adbebe461466c077b306))
-* update required php version in info ([529c113](https://github.com/baumrock/RockFrontend/commit/529c113eb36a2c3a47e955d5f68c1264f751811c))
-* update to support new rockpagebuilder sortable handles ([80099f5](https://github.com/baumrock/RockFrontend/commit/80099f5770803bff1ff5eee82adba769670a6f83))
-
-
-### Bug Fixes
-
-* fix livereload issue on PHP8.2 ([7660ea4](https://github.com/baumrock/RockFrontend/commit/7660ea423a6a7ac9d315f61d2c4d682f65f136c5))
-
-## [3.8.2](https://github.com/baumrock/RockFrontend/compare/v3.8.1...v3.8.2) (2023-12-04)
-
-
-### Bug Fixes
-
-* don't load layout file on RockPdf rendering ([fd6eaa3](https://github.com/baumrock/RockFrontend/commit/fd6eaa33600d8435354e2c1055685349d4b5132a))
 

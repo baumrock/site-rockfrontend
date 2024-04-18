@@ -7,7 +7,19 @@ The reason is that the JS solution will also work on ProCached pages :) *}
       <script>document.getElementById('footer-year').innerHTML = new Date().getFullYear() + " ";</script>
       Your Company
     </div>
-    {* you can remove this branding ;)  *}
-    <div class="uk-text-center uk-text-small uk-margin-small-top uk-text-muted">Site Profile developed by <a href=https://www.baumrock.com target=_blank>baumrock.com</a></div>
+    {* you likely want to remove this branding and debug info ;) *}
+    <div class="uk-text-center uk-text-small uk-margin-small-top uk-margin-medium-bottom uk-text-muted">
+      Site Profile developed by <a href=https://www.baumrock.com target=_blank>baumrock.com</a><br>
+      <div class="uk-margin-top">
+        $foo: {isset($foo) ? $foo : 'not defined for this template - see home.php'}<br>
+        $page->foo: {$page->foo}<br>
+        <div n:if="$page->template == home">
+          $page->foo(): {$page->foo()}
+        </div>
+      </div>
+      <div class="uk-margin-top">
+        $page->bar: {$page->bar}<br>
+      </div>
+    </div>
   </div>
 </footer>
