@@ -6,6 +6,7 @@ use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use LogicException;
+use MatthiasMullie\Minify\Exceptions\IOException;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
@@ -18,6 +19,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Tracy\Debugger;
 use Tracy\Dumper;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
@@ -72,11 +74,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_images = self::prefix . "images";
   const field_less = self::prefix . "less";
 
+  private $addMarkup;
+
   /** @var WireData */
   public $alfredCache;
 
   public $autoloadScripts;
   public $autoloadStyles;
+
+  private $contenttype = "text/html";
 
   public $createManifest = false;
 
@@ -233,6 +239,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookMethod("Page::otherLangUrl",          $this, "otherLangUrl");
     wire()->addHookAfter("Modules::refresh",             $this, "livereloadResetCache");
     wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
+    wire()->addHookAfter("Page::render",                 $this, "hookAddMarkup");
+
+    // LiveReload on Tracy Error Page
+    // See https://processwire.com/talk/topic/29910-how-to-inject-custom-markup-into-tracys-error-pages/#comment-240601
+    if ($this->wire->modules->isInstalled('TracyDebugger')) {
+      if ($this->addLiveReload()) {
+        $blueScreen = \Tracy\Debugger::getBlueScreen();
+        $blueScreen->addPanel(function () {
+          return ['tab' => 'RFE Panel', 'panel' => $this->liveReloadMarkup()];
+        });
+      }
+    }
+
 
     // others
     $this->ajaxAddEndpoints();
@@ -252,7 +271,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ready()
   {
     $this->addAssets();
-    $this->copyLayoutFileIfNewer();
   }
 
   /**
@@ -310,18 +328,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
   }
-
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
-    $file = __DIR__ . "/RockFrontend.js";
-    if ($this->wire->config->debug) {
-      // load the non-minified script
-      $this->scripts('rockfrontend')->add($file, "defer");
-      // when logged in as superuser we make sure to create the minified
-      // file even if the non-minified version is used.
-      if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-    } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+    $file = $min = __DIR__ . "/RockFrontend.js";
+
+    // while developing we create a minified js file
+    if ($this->isDev()) $min = $this->minifyFile($file);
+
+    // add file to scripts array
+    $this->scripts('rockfrontend')->add($min, "defer");
   }
 
   public function ___addAlfredStyles()
@@ -339,6 +355,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($f->name != self::field_footerlinks) return;
     if ($f->notes) $f->notes .= "\n";
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
+  }
+
+  private function addLiveReload(): bool
+  {
+    $config = $this->wire->config;
+    if (!$config->livereload) return false;
+    if ($config->ajax) return false;
+    if ($config->external) return false;
+    return true;
   }
 
   /**
@@ -374,6 +399,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $page = $this->wire->page;
     if (!$page->editable()) return;
     if ($page->template == 'admin') return;
+    if ($page->template == 'form-builder') return;
     if ($this->wire->input->get('rfpreview')) return;
     if ($this->wire->config->hideTopBar) return;
 
@@ -441,14 +467,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (in_array($base, $added)) continue;
         $added[] = $base;
         $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
-          // make htmx endpoints only available via ajax
-          // superusers are allowed to access them directly (for debugging)
-          $sudo = $this->wire->user->isSuperuser();
           $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
           $ajax = $this->wire->config->ajax || $isHtmx;
 
-          if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
-          else return $this->ajaxPublic($endpoint);
+          // ajax or no ajax?
+          if (!$ajax) {
+            // show debug screen for pw superusers
+            if ($this->wire->user->isSuperuser()) {
+              return $this->ajaxDebug($endpoint);
+            } else {
+              // guest and no ajax: no access!
+              if ($this->wire->modules->isInstalled('TracyDebugger')) {
+                Debugger::$showBar = false;
+              }
+              http_response_code(403);
+              return "Access Denied";
+            }
+          } else {
+            // render public endpoint (ajax response)
+            return $this->ajaxPublic($endpoint);
+          }
         });
       }
     }
@@ -465,6 +503,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'endpoint' => $endpoint,
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
+      'contenttype' => $this->contenttype, // must be after formatted!
     ]);
 
     return $markup;
@@ -492,7 +531,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     // array --> json
-    if (is_array($response)) return json_encode($response, JSON_PRETTY_PRINT);
+    if (is_array($response)) {
+      $this->contenttype = "application/json";
+      return json_encode($response, JSON_PRETTY_PRINT);
+    }
 
     // still no string, try to cast it to string
     try {
@@ -509,6 +551,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     try {
       $raw = $this->ajaxResponse($endpoint);
       $response = $this->ajaxFormatted($raw, $endpoint);
+      header('Content-Type: ' . $this->contenttype);
       return $response;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
@@ -558,6 +601,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function alfred($page = null, $options = [])
   {
     if (!$this->alfredAllowed()) return;
+
+    // check if frontend editing is installed
+    if (!$this->wire->modules->isInstalled("PageFrontEdit")) {
+      $this->addMarkup .= "<script>alert('Please install PageFrontEdit to use ALFRED')</script>";
+    }
 
     // support short syntax
     if ($options === false) {
@@ -1272,6 +1320,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Inject markup to the page body
+   * @param HookEvent $event
+   * @return void
+   */
+  protected function hookAddMarkup(HookEvent $event)
+  {
+    if (!$this->addMarkup) return;
+    $event->return = str_replace(
+      "</body>",
+      $this->addMarkup . "</body>",
+      $event->return
+    );
+  }
+
+  /**
    * Return a latte HTML object that doesn't need to be |noescaped
    * @return Html
    */
@@ -1449,6 +1512,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Check wether the environment is DDEV or not
+   */
+  public function isDDEV(): bool
+  {
+    return !!getenv('DDEV_HOSTNAME');
+  }
+
+  /**
+   * Internal flag for development
+   * @return bool
+   */
+  public function isDev(): bool
+  {
+    if (!$this->wire->config->debug) return false;
+    if (!$this->wire->user->isSuperuser()) return false;
+    if (!$this->isDDEV()) return false;
+    return true;
+  }
+
+  /**
    * Is given file newer than the comparison file?
    * Returns true if comparison file does not exist
    * Returns false if file does not exist
@@ -1512,10 +1595,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   protected function livereloadAddMarkup(HookEvent $event)
   {
-    $config = $this->wire->config;
-    if (!$config->livereload) return;
-    if ($config->ajax) return;
-    if ($config->external) return;
+    if (!$this->addLiveReload()) return;
     if ($this->livereloadAdded) return;
 
     // early exit when page is opened in modal window
@@ -1528,6 +1608,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this is because live reload will break the module installation screen for example
     if ($page->template == 'admin') {
       // if livereload is disabled on backend pages we exit early
+      $config = $this->wire->config;
       $livereloadBackend = $this->livereloadBackend ?: $config->livereloadBackend;
       if (!$livereloadBackend) return;
 
@@ -1684,6 +1765,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Minify all files in given directory
+   * @param string $directory
+   * @param array $options
+   * @return void
+   * @throws IOException
+   */
+  public function minifyFiles(string $directory, array $options = []): void
+  {
+    $dir = $this->toPath($directory);
+    $files = $this->wire->files->find($dir, $options);
+    foreach ($files as $file) {
+      if (str_ends_with($file, ".min.js")) continue;
+      if (str_ends_with($file, ".min.css")) continue;
+      $this->minifyFile($file);
+    }
+  }
+
+  /**
    * Helper to display markup only once
    *
    * Usage with LATTE:
@@ -1773,6 +1872,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    // update the _rockfrontend.php file if necessary
+    $this->copyLayoutFileIfNewer();
+
     // refresh uikit cache
     $this->wire->cache->save(self::cache, "");
 
@@ -2416,6 +2518,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Usage:
    * echo $rf->svgDom("/path/to/file.svg")->addClass("foo");
    *
+   * You can also provide an url instead of the absolute path:
+   * echo $rf->svgDom("/site/templates/img/icon.svg")->addClass("foo");
+   *
    * @param mixed $data
    * @return HtmlPageCrawler
    * @throws LogicException
@@ -2423,10 +2528,31 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function svgDom($data): HtmlPageCrawler
   {
     $str = $data;
+
+    // if data is a pagefiles array we use the first pagefile
     if ($data instanceof Pagefiles) $data = $data->first();
+
+    // if it is a pagefile get markup
     if ($data instanceof Pagefile) {
       $str = file_get_contents($data->filename);
     }
+
+    // if data is a string that means it is a filepath or url
+    elseif (is_string($data)) {
+      $data = Paths::normalizeSeparators($data);
+
+      // if the file does not exist we try to add the root path
+      if (!is_file($data)) $data = $this->toPath($data);
+
+      // if it is still no file we throw an exception
+      if (!is_file($data)) {
+        throw new WireException("File $data not found");
+      }
+
+      // $data is now the filepath, so we get the content
+      $str = file_get_contents($data);
+    }
+
     $dom = $this->dom($str)->filter("svg")->first();
     return $dom;
   }
