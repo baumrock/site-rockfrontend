@@ -7,3 +7,6 @@
 [submodule "site/modules/AdminStyleRock"]
 	path = site/modules/AdminStyleRock
 	url = git@github.com:baumrock/AdminStyleRock.git
+[submodule "site/modules/RockAdminTweaks"]
+	path = site/modules/RockAdminTweaks
+	url = git@github.com:baumrock/RockAdminTweaks.git
