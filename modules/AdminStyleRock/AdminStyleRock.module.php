@@ -11,6 +11,11 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
 {
 
   const prefix = "adminstylerock_";
+  const primary = "#e83561";
+  const primary_h = 345;
+  const primary_s = '80%';
+  const primary_l = '56%';
+  const saturation = '5%';
 
   const field_adminlogo = self::prefix . "adminlogo";
 
@@ -39,17 +44,20 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
     // add alfred style overrides
     $this->addHookAfter('RockFrontend::addAlfredStyles', $this, 'addAlfredStyles');
     $this->addHookAfter('Page::render', $this, 'addCssVariables');
+    if ($this->wire->user->isSuperuser()) $this->addKitchenSink();
 
     // do everything below only on admin pages
     if ($this->wire->page->template != 'admin') return;
 
-    $this->addDarkmodeToggle();
-
+    // add darkmode script + toggle
     $config = $this->wire()->config;
-    $min = !$config->debug;
+    if (!$this->noDarkmodeToggle) {
+      $config->scripts->add($config->urls($this) . "DarkmodeToggle.js");
+    }
 
     $style = $config->paths($this) . "styles/_rock.less";
     $compiled = $config->paths->assets . "admin";
+    $min = !$config->debug;
     if ($min) $compiled .= ".min.css";
     else $compiled .= ".css";
 
@@ -106,37 +114,143 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
     if ($page->template != 'admin') return;
     if ($this->wire->config->ajax) return;
     if ($this->wire->config->external) return;
-    if (!$this->tmpCustomCss) return;
+
+    // add styles from styles.php
+    $styles = $this->wire->files->render(__DIR__ . "/styles.php", [
+      'h' => $this->rockprimary_h === null ? self::primary_h : $this->rockprimary_h,
+      's' => $this->rockprimary_s === null ? self::primary_s : $this->rockprimary_s,
+      'l' => $this->rockprimary_l === null ? self::primary_l : $this->rockprimary_l,
+      'saturation' => $this->saturation === null ? self::saturation : $this->saturation,
+    ]);
     $event->return = str_replace(
       "</head>",
-      "<style>{$this->tmpCustomCss}</style></head>",
+      "$styles</head>",
       $event->return
     );
   }
 
-  private function addDarkmodeToggle(): void
+  protected function addKitchenSink(): void
   {
-    if ($this->wire->config->ajax) return;
-    if ($this->wire->external) return;
-    $this->addHookAfter("Page::render", function (HookEvent $event) {
-      $html = $event->return;
-      $icon = '<div>
-        <a class="uk-link-reset asr-show-light" data-darkmode=1 title="Dark mode" uk-tooltip><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z"/></svg></a>
-        <a class="uk-link-reset asr-show-dark" data-darkmode=0 title="Light mode" uk-tooltip><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 1 0-5.656-5.656a4 4 0 0 0 5.656 5.656zm-8.485 2.829l-1.414 1.414M6.343 6.343L4.929 4.929m12.728 1.414l1.414-1.414m-1.414 12.728l1.414 1.414M4 12H2m10-8V2m8 10h2m-10 8v2"/></svg></a>
-      </div>';
-      $html = str_replace(
-        '<div class="uk-navbar-right">',
-        '<div class="uk-navbar-right">' . $icon,
-        $html
-      );
+    if ($this->wire->input->get->name !== 'AdminStyleRock') return;
 
-      $url = $this->wire->config->urls($this) . "DarkmodeToggle.js";
-      $html = str_replace(
-        '</head>',
-        "<script src='$url'></script></head>",
-        $html
-      );
-      $event->return = $html;
+    if ($this->wire->input->debug) {
+      $this->message("Demo Alert Message");
+      $this->warning("Demo Alert Warning");
+      $this->error("Demo Alert Error");
+    }
+
+    $this->addHookAfter('InputfieldForm::render', function ($event) {
+      if ($event->object->id !== 'ModuleEditForm') return;
+
+      $form = new InputfieldForm();
+
+      $fs = new InputfieldFieldset();
+      $fs->name = "kitchensink";
+      $fs->label = 'Kitchen Sink';
+      $fs->icon = 'paint-brush';
+      $fs->notes = "Kitchen Sink Demo Note";
+      $fs->collapsed = $this->wire->input->debug
+        ? Inputfield::collapsedNo
+        : Inputfield::collapsedYesAjax;
+      $fs->description = 'This is a preview of several fields to help with custom development.
+        In RockFrontend you can enable livereload also for module pages like this, which is handy when working on the style to get live preview.
+        You can add <a href="?name=AdminStyleRock&debug=1">&debug=1</a> to this page\'s url to open Kitchen Sink by default and to show demo alerts.';
+      $fs->entityEncodeText = false;
+      $form->add($fs);
+
+      $fs->add([
+        'type' => 'text',
+        'label' => 'Demo Text Input',
+        'notes' => 'Demo Note',
+        'name' => 'demotext',
+        'columnWidth' => 33,
+      ]);
+      $fs->add([
+        'type' => 'select',
+        'label' => 'Demo Select',
+        'options' => [
+          'option1' => 'Option 1',
+          'option2' => 'Option 2',
+          'option3' => 'Option 3',
+        ],
+        'value' => 'option1',
+        'name' => 'demoselect',
+        'columnWidth' => 33,
+      ]);
+      $fs->add([
+        'type' => 'checkbox',
+        'label' => 'Demo Checkbox',
+        'checkboxLabel' => 'Demo Checkbox Label',
+        'name' => 'democheckbox',
+        'columnWidth' => 34,
+      ]);
+      $fs->add([
+        'type' => 'asmSelect',
+        'label' => 'Demo ASM Select',
+        'name' => 'demoasm',
+        'options' => [
+          'option1' => 'ASM Option 1',
+          'option2' => 'ASM Option 2',
+          'option3' => 'ASM Option 3',
+        ],
+        'value' => ['option1'], // Default selected value
+        'description' => 'This is a demo ASM Select field.',
+      ]);
+      $fs->add([
+        'type' => 'textarea',
+        'label' => 'Demo Textarea',
+        'name' => 'demotextarea',
+        'columnWidth' => 33,
+      ]);
+      $fs->add([
+        'type' => 'radios',
+        'label' => 'Demo Radios',
+        'name' => 'demoradios',
+        'options' => [
+          'option1' => 'Option 1',
+          'option2' => 'Option 2',
+          'option3' => 'Option 3',
+        ],
+        'columnWidth' => 33,
+      ]);
+      $fs->add([
+        'type' => 'toggle',
+        'label' => 'Demo Toggle',
+        'value' => 'yes',
+        'name' => 'demotoggle',
+        'columnWidth' => 34,
+      ]);
+      $this->wire->modules->get('JqueryUI')->use('vex');
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'VEX Demo',
+        'value' => '
+          <button class="ui-button open-vex">VEX Demo</button>
+          <a href=# class=open-vex>VEX Demo</a>
+          <script>
+          $(document).ready(function() {
+            $(".open-vex").click(function(e) {
+              e.preventDefault();
+              ProcessWire.alert("Demo VEX Alert");
+            });
+          });
+          </script>
+        ',
+        'columnWidth' => 40,
+      ]);
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'UIkit Notifications',
+        'value' => '
+          <button class="uk-button uk-button-default demo" type="button" onclick="UIkit.notification({message: \'Primary message…\', status: \'primary\', timeout: 15000})">Primary</button>
+          <button class="uk-button uk-button-default demo" type="button" onclick="UIkit.notification({message: \'Success message…\', status: \'success\', timeout: 15000})">Success</button>
+          <button class="uk-button uk-button-default demo" type="button" onclick="UIkit.notification({message: \'Warning message…\', status: \'warning\', timeout: 15000})">Warning</button>
+          <button class="uk-button uk-button-default demo" type="button" onclick="UIkit.notification({message: \'Danger message…\', status: \'danger\', timeout: 15000})">Danger</button>
+        ',
+        'columnWidth' => 60,
+      ]);
+
+      $event->return = $form->render() . $event->return;
     });
   }
 
@@ -220,11 +334,6 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
     $modules->saveConfig($m, $data);
   }
 
-  public function ___install()
-  {
-    $this->setLogoUrl($this->wire->config->urls($this) . "baumrock.svg");
-  }
-
   /**
    * Config inputfields
    * @param InputfieldWrapper $inputfields
@@ -233,16 +342,42 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
   {
     $this->iframe($inputfields);
 
-    // add main color
+    $inputfields->add([
+      'type' => 'markup',
+      'label' => 'Color Palette',
+      'icon' => 'paint-brush',
+      'value' => $this->wire->files->render(__DIR__ . "/colorpicker.php", [
+        'rockprimary' => $this->rockprimary ?: self::primary,
+        'saturation' => substr($this->saturation ?: self::saturation, 0, -1),
+      ]),
+    ]);
+
     $inputfields->add([
       'type' => 'text',
       'name' => 'rockprimary',
-      'icon' => 'paint-brush',
-      'notes' => 'eg #00ff00 or rgba(0,0,0,1)',
-      'value' => $this->rockprimary,
-      'label' => 'Primary Color',
-      'description' => 'This color is used as @rock-primary of the rock.less style'
-        . ' and as @alfred-primary for the alfred.less frontend editing style',
+      'value' => $this->rockprimary ?: self::primary,
+      'columnWidth' => 50,
+    ]);
+    $inputfields->add([
+      'type' => 'text',
+      'name' => 'saturation',
+      'value' => $this->saturation ?: self::saturation,
+      'columnWidth' => 50,
+    ]);
+    $inputfields->add([
+      'type' => 'hidden',
+      'name' => 'rockprimary_h',
+      'value' => $this->rockprimary_h,
+    ]);
+    $inputfields->add([
+      'type' => 'hidden',
+      'name' => 'rockprimary_s',
+      'value' => $this->rockprimary_s,
+    ]);
+    $inputfields->add([
+      'type' => 'hidden',
+      'name' => 'rockprimary_l',
+      'value' => $this->rockprimary_l,
     ]);
 
     /** @var RockMigrations $rm */
@@ -266,11 +401,11 @@ class AdminStyleRock extends WireData implements Module, ConfigurableModule
     $inputfields->add($f);
 
     $inputfields->add([
-      'type' => 'textarea',
-      'name' => 'tmpCustomCss',
-      'icon' => 'code',
-      'value' => $this->tmpCustomCss,
-      'label' => 'Custom CSS (for variables)',
+      'type' => 'checkbox',
+      'name' => 'noDarkmodeToggle',
+      'icon' => 'moon-o',
+      'checked' => $this->noDarkmodeToggle ? 'checked' : '',
+      'label' => 'Don\'t add darkmode-toggle to backend navbar',
     ]);
 
     return $inputfields;
