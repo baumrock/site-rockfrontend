@@ -17,6 +17,9 @@ jobs:
           mkdir -p $FOLDER/install/assets/
           cp tailwind.config.js $FOLDER/install/assets/
 
+      - name: Copy package.json
+        run: cp package.json $FOLDER/install/assets/
+
       - name: Deploy to main branch
         uses: s0/git-publish-subdir-action@develop
         env:

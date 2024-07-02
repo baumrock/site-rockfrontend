@@ -27,9 +27,13 @@ if (!defined("PROCESSWIRE_INSTALL")) die();
 /** @var User $user */
 // …and so on for other API variables
 
-// copy tailwind config to pw root
+// copy config files to pw root
 $wire->files->copy(
   __DIR__ . '/assets/tailwind.config.js',
+  $config->paths->root
+);
+$wire->files->copy(
+  __DIR__ . '/assets/package.json',
   $config->paths->root
 );
 
