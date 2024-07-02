@@ -10,7 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Deploy
+      - name: Copy tailwind.config.js
+        run: cp tailwind.config.js site/assets/backups/export-profile/assets/
+
+      - name: Deploy to main branch
         uses: s0/git-publish-subdir-action@develop
         env:
           REPO: self

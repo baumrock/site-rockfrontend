@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./site/templates/**/*.{latte,php}"],
+  content: [
+    "./site/templates/**/*.{latte,php}",
+    "./site/templates/scripts/main.js",
+  ],
   theme: {
     extend: {
       screens: {
