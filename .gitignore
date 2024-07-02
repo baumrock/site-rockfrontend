@@ -14,9 +14,6 @@
 ## keep rockshell db dumps
 !/site/assets/backups/db.sql
 
-## keep exported site profile
-!/site/assets/backups/export-profile
-
 ## keep asset folders
 !site/assets/*/.htaccess
 !site/assets/files/README.txt
