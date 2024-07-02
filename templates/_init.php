@@ -19,8 +19,8 @@ $rf->styles()
   ->minify($config->debug ? false : true);
 
 $rf->scripts()
-  // load uikit
-  ->add('/site/templates/uikit/dist/js/uikit.min.js', 'defer')
+  // load uikit (without defer to avoid FOUC)
+  ->add('/site/templates/uikit/dist/js/uikit.min.js')
   // load custom javascript of this project
   ->add('/site/templates/scripts/main.js', 'defer')
   // minify on production
