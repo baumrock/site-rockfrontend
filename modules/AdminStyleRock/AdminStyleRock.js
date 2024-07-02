@@ -1,5 +1,6 @@
+// add darkmode toggle to navbar
 (() => {
-  // add darkmode toggle to navbar
+  if (!ProcessWire.config.asrDarkmodeToggle) return;
   document.addEventListener("DOMContentLoaded", function () {
     const navbarRight = document.querySelector(
       "#pw-masthead nav.uk-navbar .uk-navbar-right"
