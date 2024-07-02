@@ -2,9 +2,6 @@
 
 namespace ProcessWire;
 
-use Latte\Runtime\Html;
-use Wa72\HtmlPageDom\HtmlPageCrawler;
-
 // expose the site module as global site() function
 function site(): Site
 {
@@ -43,7 +40,7 @@ class Site extends WireData implements Module
 
     // when using RockMigrations we watch this file
     // you can remove this section if you are not using RockMigrations
-    if (function_exists('rockmigrations')) {
+    if (function_exists('\ProcessWire\rockmigrations')) {
       // migrate site module before other modules so that if we create global
       // fields we make sure we can use them in other modules
       rockmigrations()->watch($this, 99);
@@ -66,27 +63,5 @@ class Site extends WireData implements Module
   {
     // place your migrations here
     // if you are not using RockMigrations you can remove the entire method
-  }
-
-  /**
-   * This method renders the .md files from the docs folder into the
-   * site profiles frontend. You can remove this method after installation
-   * @param Page $page
-   * @return Html
-   */
-  public function renderDocs(Page $page)
-  {
-    $name = $page->name;
-    if ($name == "home") $name = "readme";
-    $readme = $this->wire->config->paths->templates . "docs/$name.md";
-
-    $str = is_file($readme)
-      ? $this->wire->files->fileGetContents($readme)
-      : "";
-
-    // convert markdown into html markup
-    $md = $this->wire->modules->get('TextformatterMarkdownExtra');
-    $md->format($str);
-    return rockfrontend()->html($str);
   }
 }
