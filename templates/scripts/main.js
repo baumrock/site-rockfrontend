@@ -1,1 +1,1 @@
-// Example JS file
+// Your site's custom JS file
