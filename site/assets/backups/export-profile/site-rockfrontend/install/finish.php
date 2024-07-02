@@ -27,7 +27,10 @@ if (!defined("PROCESSWIRE_INSTALL")) die();
 /** @var User $user */
 // …and so on for other API variables
 
-// your custom finishing code here
-// foo bar
+// copy tailwind config to pw root
+$wire->files->copy(
+  __DIR__ . '/assets/tailwind.config.js',
+  $config->paths->root
+);
 
 $installer->ok('Finished installing site profile');

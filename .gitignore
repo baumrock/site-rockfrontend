@@ -3,6 +3,7 @@
 /site/assets/sessions/*
 /site/assets/logs/*
 /site/assets/backups/*
+!/site/assets/backups/export-profile
 
 ### exclude all files
 /site/assets/files/*
