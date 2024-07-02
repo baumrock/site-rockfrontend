@@ -1,0 +1,11 @@
+{* Note: The current year is set by JavaScript and not by PHP date('Y')
+The reason is that the JS solution will also work on ProCached pages :) *}
+<footer class='uk-background-secondary'>
+  <div class="uk-container">
+    <div class="uk-light uk-padding uk-text-center">
+      &copy; 1999 - <span id="footer-year"></span>
+      <script>document.getElementById('footer-year').innerHTML = new Date().getFullYear() + " ";</script>
+      Your Company
+    </div>
+  </div>
+</footer>
