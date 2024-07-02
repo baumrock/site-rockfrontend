@@ -1,6 +1,8 @@
-<?php namespace ProcessWire;
+<?php
 
-if(!defined("PROCESSWIRE")) die();
+namespace ProcessWire;
+
+if (!defined("PROCESSWIRE")) die();
 
 /** @var ProcessWire $wire */
 

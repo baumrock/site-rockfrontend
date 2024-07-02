@@ -7,14 +7,14 @@ xdebug_enabled: false
 additional_hostnames: []
 additional_fqdns: []
 database:
-    type: mariadb
-    version: "10.6"
+  type: mariadb
+  version: "10.6"
 omit_containers: [dba]
 use_dns_when_possible: true
 timezone: Europe/Vienna
 composer_version: "2"
-web_environment: []
-
+web_environment:
+  - TRACY_LOCALROOTPATH=$DDEV_APPROOT/
 # Key features of DDEV's config.yaml:
 
 # name: <projectname> # Name of the project, automatically provides
