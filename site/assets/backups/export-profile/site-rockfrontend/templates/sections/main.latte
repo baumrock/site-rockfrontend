@@ -2,7 +2,15 @@
   <div class="uk-container uk-section-small">
     <h1>{$page->title}</h1>
     <div class='uk-alert uk-alert-warning text-orange-600 border-orange-600' style='border:2px solid'>
-      Note: To finish the installation you have to run "npm install -D" on the command line in the root directory of your project.
+      <p>Note: To finish the installation you have to run "npm install -D" on the command line in the root directory of your project.</p>
+      <p>Once that is done either execute the RockShell command "pw:setup" or just copy this to your site config:</p>
+      <pre><code>$config->livereload = 1;
+$config->livereloadBuild = true;</code></pre>
+      <p>Then open the browsers devtools and reload this page. You should see this in your console:</p>
+      <pre><code>Loading LiveReload
+RockFrontend is listening for file changes...</code></pre>
+      <p>Then add the class {'bg-red'}{'- 500'} to the &lt;h1&gt; tag in /site/templates/sections/main.latte; RockFrontend should reload the browser and the headline above should get a red background, which means that LiveReload + Tailwind is working 😎🚀</p>
+      <p>You can now remove this note and start developing your dream project. Enjoy!</p>
     </div>
   </div>
 </main>
