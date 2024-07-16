@@ -16,7 +16,9 @@ Setup is as simple as these 3 steps:
 
 1. Download the profile
 2. Install ProcessWire and choose this profile
-3. When done, run `npm install -D`
+3. Follow the instructions on the welcome screen:
+
+<img src=https://i.imgur.com/8YWPqLf.png>
 
 😎💪
 
