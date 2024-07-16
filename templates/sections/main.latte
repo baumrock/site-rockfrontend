@@ -3,7 +3,7 @@
     <h1>{$page->title}</h1>
     <div class='uk-alert uk-alert-warning text-orange-600 border-orange-600' style='border:2px solid'>
       <p>Note: To finish the installation you have to run "npm install -D" on the command line in the root directory of your project.</p>
-      <p>Once that is done either execute the RockShell command "pw:setup" or just copy this to your site config:</p>
+      <p>Once that is done either execute the RockShell command "pw:setup" or just copy this to your site config (make sure to add this only on your development config, not on production!):</p>
       <pre><code>$config->livereload = 1;
 $config->livereloadBuild = true;</code></pre>
       <p>Then open the browsers devtools and reload this page. You should see this in your console:</p>
