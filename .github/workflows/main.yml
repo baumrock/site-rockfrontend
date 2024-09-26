@@ -21,8 +21,8 @@ jobs:
 
       - name: Create zip archive
         run: |
-          cd site/assets/backups/export-profile/site-rockfrontend
-          zip -r site-rockfrontend.zip .
+          cd site/assets/backups/export-profile
+          zip -r site-rockfrontend.zip site-rockfrontend
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
