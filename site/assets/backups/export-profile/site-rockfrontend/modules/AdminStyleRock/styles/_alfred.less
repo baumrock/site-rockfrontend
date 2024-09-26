@@ -1,0 +1,76 @@
+/* ##### Frontend Editing Overrides for ALFRED ##### */
+// header and footer bar - hardcoded uk-background-muted
+@alfred-modal-background: #f8f8f8;
+// text for header and footer bar - hardcoded global-color
+@alfred-modal-color: #666;
+// primary button - hardcoded baumrock ci
+@alfred-primary: #00bb86;
+// secondary button - hardcoded baumrock ci
+@alfred-secondary: #313131;
+
+// pw modal
+.ui-dialog.ui-front {
+  // titlebar
+  .ui-dialog-titlebar {
+    background-color: @alfred-modal-background !important;
+    .ui-dialog-title {
+      color: @alfred-modal-color !important;
+    }
+    i {
+      color: @alfred-modal-color !important;
+    }
+    button {
+      background-color: transparent !important;
+    }
+  }
+
+  // modal content
+  iframe.pw-modal-window {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    &.pw-modal-loaded {
+      opacity: 1;
+    }
+  }
+
+  // footer (with buttons)
+  .ui-dialog-buttonpane {
+    background: @alfred-modal-background;
+
+    .ui-button {
+      border: 0;
+      outline: 0;
+      background: @alfred-primary;
+      &:hover { background: darken(@alfred-primary, 10%); }
+    }
+  }
+}
+
+// inline editing
+.ui-widget.pw-edit-buttons {
+  background: @alfred-modal-background;
+  .ui-button {
+    border: 0 !important;
+    outline: 0 !important;
+  }
+  .pw-edit-save {
+    background: @alfred-primary;
+    &:hover { background: darken(@alfred-primary, 10%); }
+  }
+  .pw-edit-cancel {
+    background: @alfred-secondary !important;
+    &:hover { background: darken(@alfred-secondary, 10%) !important; }
+  }
+  .pw-edit-saving,
+  .pw-edit-saved {
+    background: @alfred-secondary !important;
+  }
+}
+
+// vex dialog
+.vex {
+  .vex-dialog-button-primary {
+    background-color: @alfred-primary !important;
+    color: white;
+  }
+}

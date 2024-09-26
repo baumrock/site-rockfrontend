@@ -1,0 +1,727 @@
+<?php namespace ProcessWire;
+
+/**
+ * ProcessWire Edit Link Process
+ *
+ * Provides the link capability as used by the rich text editor. 
+ * 
+ * ProcessWire 3.x, Copyright 2023 by Ryan Cramer
+ * https://processwire.com
+ * 
+ * @property string $relOptions
+ * @property string $classOptions
+ * @property string $targetOptions
+ * @property int $urlType
+ * @property int $extLinkRel
+ * @property string $extLinkTarget
+ * @property string $extLinkClass
+ * @property int $noLinkTextEdit 3.0.211+
+ * 
+ * @method InputfieldForm buildForm($currentValue, $currentText)
+ * @method array getFilesPage(Page $page, $prefix = '') Hookable only in 3.0.222+
+ *
+ */
+
+class ProcessPageEditLink extends Process implements ConfigurableModule {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Page Edit Link',          
+			'summary' => 'Provides a link capability as used by some Fieldtype modules (like rich text editors).', 
+			'version' => 112, 
+			'permanent' => true, 
+			'permission' => 'page-edit',
+			'icon' => 'link', 
+		);
+	}
+
+	/**
+	 * URL type: Absolute path from root (no relative paths)
+	 * 
+	 */
+	const urlTypeAbsolute = 0;
+
+	/**
+	 * URL type: Relative path in same branch only
+	 * 
+	 */
+	const urlTypeRelativeBranch = 1;
+
+	/**
+	 * URL type: Relative path always
+	 * 
+	 */
+	const urlTypeRelativeAll = 2;
+	
+	/**
+	 * @var Page|null
+	 *
+	 */
+	protected $page = null;
+
+	/**
+	 * The "choose page" start label
+	 * 
+	 * @var string
+	 * 
+	 */
+	protected $startLabel = '';
+
+	/**
+	 * Language ID
+	 * 
+	 * @var int
+	 * 
+	 */
+	protected $langID = 0;
+
+	/**
+	 * Get default configuration settings
+	 * 
+	 * @return array
+	 * 
+	 */
+	public static function getDefaultSettings() {
+		return array(
+			'classOptions' => "",
+			'relOptions' => "nofollow",
+			'targetOptions' => "_blank",
+			'urlType' => self::urlTypeAbsolute,
+			'extLinkRel' => '',
+			'extLinkTarget' => '',
+			'extLinkClass' => '', 
+			'noLinkTextEdit' => 0, 
+		);
+	}
+
+	/**
+	 * Construct
+	 * 
+	 */
+	public function __construct() {
+		parent::__construct();
+		foreach(self::getDefaultSettings() as $key => $value) {
+			parent::set($key, $value);
+		}
+	}
+
+	/**
+	 * Setup for execute methods
+	 * 
+	 */
+	public function setup() {
+		$sanitizer = $this->wire()->sanitizer;
+		$modules = $this->wire()->modules;
+		$pages = $this->wire()->pages;
+		$input = $this->wire()->input;
+
+		
+		/** @var ProcessPageList $pageList */
+		$pageList = $modules->get('ProcessPageList');
+		$pageList->renderReady();
+
+		$this->startLabel = $this->_('Choose page');
+		$id = (int) $input->get('id');
+		$this->langID = (int) $input->get('lang');
+		if($id) $this->page = $pages->get($id);
+		if($this->page && $this->page->id && !$this->wire()->user->hasPermission("page-view", $this->page)) {
+			throw new WireException("You don't have access to this page");
+		}
+		if(!$this->page) $this->page = $pages->newNullPage();
+
+		$this->wire()->config->js('ProcessPageEditLink', array(
+			'selectStartLabel' => $this->startLabel,
+			'langID' => $this->langID,
+			'pageID' => $id,
+			'pageUrl' => $this->page->url,
+			'pageName' => $this->page->name,
+			'rootParentUrl' => $this->page->rootParent->url,
+			'slashUrls' => $this->page->template ? $this->page->template->slashUrls : 1,
+			'urlType' => $this->urlType,
+			'extLinkRel' => $sanitizer->names($this->extLinkRel),
+			'extLinkTarget' => $this->extLinkTarget,
+			'extLinkClass' => $sanitizer->names($this->extLinkClass),
+			'noLinkTextEdit' => (int) $this->noLinkTextEdit
+		));
+	}
+
+	/**
+	 * Set
+	 * 
+	 * @param string $key
+	 * @param string|int|array $value
+	 * @return self
+	 *
+	 */
+	public function set($key, $value) {
+		if($key === 'classOptions' || $key === 'relOptions' || $key === 'targetOptions') {
+			$value = $this->sanitizeOptions($value);
+		} else if($key === 'extLinkRel' || $key === 'extLinkClass') {
+			$value = $this->wire()->sanitizer->htmlClasses($value);
+		} else if($key === 'extLinkTarget') {
+			$value = $this->wire()->sanitizer->htmlClass($value);
+		}
+		return parent::set($key, $value);
+	}
+
+	/**
+	 * Sanitize single option 'value', 'value=label', or 'value="label"'
+	 * 
+	 * @param string $value
+	 * @return string
+	 * 
+	 */
+	protected function sanitizeOption($value) {
+		$sanitizer = $this->wire()->sanitizer;
+		$value = trim($value);
+		$plus = strpos($value, '+') === 0 ? '+' : '';
+		if($plus) $value = ltrim($value, '+');
+		if(strpos($value, '=') === false) return $plus . $sanitizer->htmlClasses($value);
+		// value=label or value="label"
+		list($value, $label) = explode('=', $value, 2);
+		$value = trim($value);
+		$label = trim($label);
+		$value = $sanitizer->htmlClasses($value);
+		if(!strlen($value)) return '';
+		$quote = strpos($label, '"') === 0 ? '"' : '';
+		$label = str_replace('"', '', $label);
+		$label = $sanitizer->text($label);
+		$value = strlen($label) ? "$plus$value=$quote$label$quote" : "$value";
+		return $value;
+	}
+
+	/**
+	 * Sanitize multiple newline separated options
+	 * 
+	 * @param string $value
+	 * @return string
+	 * 
+	 */
+	protected function sanitizeOptions($value) {
+		$value = trim($value);
+		if(!strlen($value)) return '';
+		if(strpos($value, "\n") === false) return $this->sanitizeOption($value);
+		$lines = array();
+		foreach(explode("\n", $value) as $line) {
+			$line = $this->sanitizeOption($line);
+			if(strlen($line)) $lines[] = $line;
+		}
+		return implode("\n", $lines);
+	}
+
+	/**
+	 * Build the edit link form
+	 * 
+	 * @param string Current href value $currentValue
+	 * @param string Current linked text $currentText
+	 * @since 3.0.217
+	 *
+	 */
+	protected function ___buildForm($currentValue, $currentText) {
+		
+		$sanitizer = $this->wire()->sanitizer;
+		$modules = $this->wire()->modules;
+		$config = $this->wire()->config;
+		$input = $this->wire()->input;
+		
+		/** @var InputfieldForm $form */
+		$form = $modules->get("InputfieldForm");
+		$form->attr('id', 'ProcessPageEditLinkForm');
+
+		$modules->get('JqueryWireTabs');
+
+		/** @var InputfieldWrapper $fieldset */
+		$fieldset = $this->wire(new InputfieldWrapper());
+		$fieldset->attr('title', $this->_('Link'));
+		$fieldset->addClass('WireTab');
+		$form->add($fieldset);
+
+		if($this->noLinkTextEdit) {
+			// link text editing disabled
+		} else if($currentText) {
+			/** @var InputfieldText $field */
+			$field = $modules->get("InputfieldText");
+			$field->label = $this->_('Link text');
+			$field->icon = 'pencil-square';
+			$field->attr('id+name', 'link_text');
+			$field->val($currentText);
+			$fieldset->add($field);
+		}
+
+		/** @var InputfieldPageAutocomplete $field */
+		$field = $modules->get("InputfieldPageAutocomplete");
+		$field->label = $this->_('Link to URL');
+		$field->attr('id+name', 'link_page_url');
+		$field->icon = 'external-link-square';
+		$field->description = $this->_('Enter a URL, email address, anchor, or enter word(s) to find a page.');
+		$field->labelFieldName = 'url';
+		if($modules->isInstalled('PagePaths') && !$this->wire('languages')) {
+			$field->searchFields = 'path title';
+		} else {
+			$field->searchFields = 'name title';
+		}
+		if($this->langID) $field->lang_id = $this->langID;
+		$field->maxSelectedItems = 1;
+		$field->useList = false;
+		$field->allowAnyValue = true;
+		$field->disableChars = '/:.#';
+		$field->useAndWords = true;
+		$field->findPagesSelector =
+			"has_parent!=" . $config->adminRootPageID . ", " .
+			"id!=" . $config->http404PageID;
+		if($currentValue) $field->attr('value', $currentValue);
+		$fieldset->add($field);
+
+		if(is_array($input->get('anchors'))) {
+			$field->columnWidth = 60;
+			/** @var InputfieldSelect $field */
+			$field = $modules->get('InputfieldSelect');
+			$field->columnWidth = 40;
+			$field->attr('id+name', 'link_page_anchor');
+			$field->label = $this->_('Select Anchor');
+			$field->description = $this->_('Anchors found in the text you are editing.');
+			$field->icon = 'flag';
+			foreach($input->get->array('anchors') as $anchor) {
+				$anchor = '#' . $sanitizer->text($anchor);
+				if(strlen($anchor)) $field->addOption($anchor);
+				if($currentValue && $currentValue == $anchor) $field->attr('value', $currentValue);
+			}
+			$fieldset->add($field);
+		}
+
+		/** @var InputfieldInteger $field */
+		$field = $modules->get('InputfieldInteger');
+		$field->attr('id+name', 'link_page_id');
+		$field->label = $this->_("Select Page");
+		$field->set('startLabel', $this->startLabel);
+		$field->collapsed = Inputfield::collapsedYes;
+		$field->icon = 'sitemap';
+		$fieldset->add($field);
+
+		if($this->page->numChildren) {
+			/** @var InputfieldInteger $field */
+			$field = $modules->get('InputfieldInteger');
+			$field->attr('id+name', 'child_page_id');
+			$field->label = $this->_("Select Child Page");
+			$field->description = $this->_('This is the same as "Select Page" above, but may quicker to use if linking to children of the current page.');
+			$field->set('startLabel', $this->startLabel);
+			$field->collapsed = Inputfield::collapsedYes;
+			$field->icon = 'sitemap';
+			$fieldset->append($field);
+		}
+
+		$fieldset->append($this->getFilesField());
+
+		/** @var InputfieldWrapper $fieldset */
+		$fieldset = $this->wire(new InputfieldWrapper());
+		$fieldset->attr('title', $this->_('Attributes'));
+		$fieldset->attr('id', 'link_attributes');
+		$fieldset->addClass('WireTab');
+		$form->append($fieldset);
+
+		/** @var InputfieldText $field */
+		$field = $modules->get('InputfieldText');
+		$field->attr('id+name', 'link_title');
+		$field->label = $this->_('Title');
+		$field->description = $this->_('Additional text to describe link.');
+		if($input->get('title')) {
+			$field->attr('value', $sanitizer->unentities($sanitizer->text($input->get('title'))));
+		}
+		$fieldset->add($field);
+
+		if($this->targetOptions) {
+			/** @var InputfieldSelect $field */
+			$field = $modules->get('InputfieldSelect');
+			$field->attr('id+name', 'link_target');
+			$field->label = $this->_('Target');
+			$field->description = $this->_('Where this link will open.');
+			$this->addSelectOptions($field, 'target', $this->targetOptions);
+			if($this->relOptions) $field->columnWidth = 50;
+			$fieldset->add($field);
+			if($this->extLinkTarget) {
+				$options = $field->getOptions();
+				if(!isset($options[$this->extLinkTarget])) $field->addOption($this->extLinkTarget);
+			}
+		}
+
+		if($this->relOptions || $this->extLinkRel) {
+			/** @var InputfieldSelect $field */
+			$field = $modules->get('InputfieldSelect');
+			$field->attr('id+name', 'link_rel');
+			$field->label = $this->_('Rel');
+			$field->description = $this->_('Relationship of link to document.');
+			if($this->targetOptions) $field->columnWidth = 50;
+			$this->addSelectOptions($field, 'rel', $this->relOptions);
+			$fieldset->add($field);
+			if($this->extLinkRel) {
+				$options = $field->getOptions();
+				if(!isset($options[$this->extLinkRel])) $field->addOption($this->extLinkRel);
+			}
+		}
+
+		$classOptions = $this->getClassOptions();
+		if($classOptions) {
+			/** @var InputfieldCheckboxes $field */
+			$field = $modules->get('InputfieldCheckboxes');
+			$field->attr('id+name', 'link_class');
+			$field->label = $this->_('Class');
+			$field->description = $this->_('Additional classes that can affect the look or behavior of the link.');
+			$field->optionColumns = 1;
+			$this->addSelectOptions($field, 'class', $classOptions);
+			if($this->extLinkClass) {
+				$options = $field->getOptions();
+				if(!isset($options[$this->extLinkClass])) $field->addOption($this->extLinkClass);
+			}
+			$fieldset->add($field);
+		}
+
+		if($this->wire()->user->isSuperuser()) $fieldset->notes =
+			sprintf(
+				$this->_('You may customize available attributes shown above in the %s module settings.'),
+				"[ProcessPageEditLink](" . $config->urls->admin . "module/edit?name=ProcessPageEditLink)"
+			);
+		
+		return $form;
+	}
+
+	/**
+	 * Primary execute
+	 *
+	 * @return string
+	 *
+	 */
+	public function ___execute() {
+
+		$sanitizer = $this->wire()->sanitizer;
+		$input = $this->wire()->input;
+		
+		$this->setup();
+		
+		if($input->get('href')) {
+			$currentValue = $sanitizer->url($input->get('href'), array(
+				'stripQuotes' => false,
+				'allowIDN' => true,
+			));
+		} else {
+			$currentValue = '';
+		}
+
+		$currentText = $input->get('text');
+		$currentText = $currentText === null ? '' : $this->wire()->sanitizer->text($currentText);
+		
+		$form = $this->buildForm($currentValue, $currentText); 
+
+		return $form->render() . "<p class='detail ui-priority-secondary'><code id='link_markup'></code></p>";
+	}
+
+	/**
+	 * Get class options string
+	 * 
+	 * This gets class options specified with module and those specified in input.get[class].
+	 * 
+	 * @return string Newline separated string of class options
+	 * @since 3.0.212
+	 * 
+	 */
+	protected function getClassOptions() {
+		
+		$sanitizer = $this->wire()->sanitizer;
+		$inputClass = $this->wire()->input->get->text('class');
+		
+		if(empty($inputClass)) return $this->classOptions;
+		
+		$inputClass = $sanitizer->htmlClasses($inputClass, true);
+		
+		if(!count($inputClass)) return $this->classOptions;
+		
+		sort($inputClass);
+		
+		$inputClasses = $inputClass;
+		$inputClass = implode(' ', $inputClass);
+		$classOptions = array();
+		
+		if($this->classOptions) {
+			foreach(explode("\n", $this->classOptions) as $line) {
+				$value = ltrim(trim($line), '+');
+				if(strpos($value, '=')) {
+					list($value, /*$label*/) = explode('=', $value, 2);
+				}
+				if(strpos($value, ' ')) {
+					$value = $sanitizer->htmlClasses($value, true);
+					sort($value);
+					$value = implode(' ', $value);
+				}
+				$classOptions[$value] = $line;
+			}
+		}
+		
+		if(isset($classOptions[$inputClass])) {
+			// class already appears as-is, i.e. "uk-text-muted" or "uk-text-muted uk-text-small", etc. 
+		} else {
+			// add new classes from input
+			foreach($inputClasses as $class) {
+				if(!isset($classOptions[$class])) $classOptions[$class] = $class;
+			}
+		}
+
+		return count($classOptions) ? implode("\n", $classOptions) : '';
+	}
+
+	/**
+	 * @param InputfieldSelect $field
+	 * @param $attrName
+	 * @param $optionsText
+	 * 
+	 */
+	protected function addSelectOptions(InputfieldSelect $field, $attrName, $optionsText) {
+	
+		$input = $this->wire()->input;
+		$isExisting = $input->get('href') != ''; 
+		$existingValueStr = $this->wire()->sanitizer->text($input->get($attrName));
+		$existingValueArray = strlen($existingValueStr) ? explode(' ', $existingValueStr) : array(); 
+		$values = array();
+		
+		if($field instanceof InputfieldRadios) {
+			$field->addOption('', $this->_('None')); 
+		}
+		
+		foreach(explode("\n", $optionsText) as $value) {
+			$value = trim($value);
+			$isDefault = strpos($value, '+') !== false;
+			if($isDefault) $value = trim($value, '+'); 
+			$attr = array();
+			$value = trim($value, '+ ');
+			$label = '';
+			if(strpos($value, '=') !== false) {
+				list($value, $label) = explode('=', $value, 2); 
+				$value = trim($value);
+				$label = trim($label); 
+			} else {
+				if($value == '_blank') $label = $this->_('open in new window');
+				if($value == 'nofollow') $label = $this->_('tell search engines not to follow');
+			}
+			if(strpos($label, '"') === 0 || strpos($label, "'") === 0) {
+				$label = trim($label, "\"'");
+			} else if($label) {
+				$label = "$value ($label)";
+			} else {
+				$label = $value; 
+			}
+			
+			if(($isDefault && !$isExisting) || (in_array($value, $existingValueArray) || $existingValueStr === $value)) {
+				if($field instanceof InputfieldCheckboxes) {
+					$attr['checked'] = 'checked';
+				} else {
+					$attr['selected'] = 'selected';
+				}
+			}
+	
+			$field->addOption($value, $label, $attr);
+			$values[] = $value;
+		}
+		
+	}
+
+	/**
+	 * Return JSON containing files list for ajax use
+	 * 
+	 * @return string
+	 * @throws WireException
+	 * 
+	 */
+	public function ___executeFiles() {
+		$this->setup();
+		if(!$this->page->id) throw new WireException("A page id must be specified"); 	
+		$files = $this->getFiles();	
+		return wireEncodeJSON($files);
+	}
+
+	/**
+	 * Get array of info about files attached to given Page
+	 *
+	 * @return array Associative array of "/url/to/file.pdf" => "Field label: basename"
+	 *
+	 */
+	protected function getFiles() {
+		$files = array();
+		$page = $this->page;
+		// As the link generator might be called in a repeater, we need to find the containing page		
+		$n = 0;
+		while(wireInstanceOf($page, 'RepeaterPage') && ++$n < 10) {
+			/** @var RepeaterPage $page */
+			$page = $page->getForPage();
+		}
+		if($page && $page->id) {
+			$files = $this->getFilesPage($page);
+		}
+		asort($files); 
+		return $files;
+	}
+
+	/**
+	 * Get array of info about files attached to given Page, including any repeater items
+	 * 
+	 * Hookable in 3.0.222+ only
+	 * 
+	 * @param Page $page
+	 * @param string $prefix Optional prefix to prepend to "Field label:" portion of label
+	 * @return array Associative array of "/url/to/file.pdf" => "Field label: basename"
+	 * 
+	 */
+	protected function ___getFilesPage(Page $page, $prefix = '') {
+		$files = array();
+		foreach($page->template->fieldgroup as $field) {
+			/** @var Fieldtype $type */
+			$type = $field->type;
+			if($type instanceof FieldtypeFile) {
+				$value = $page->get($field->name);
+				if($value) foreach($page->get($field->name) as $file) {
+					$files[$file->url] = $prefix . $field->getLabel() . ': ' . $file->basename;
+				}
+			} else if(wireInstanceOf($type, 'FieldtypeRepeater')) { 
+				$value = $page->get($field->name);
+				if($value) {
+					if($value instanceof Page) $value = array($value);
+					if(WireArray::iterable($value)) {
+						foreach($value as $repeaterPage) {
+							$files = array_merge($this->getFilesPage($repeaterPage, $field->getLabel() . ': '), $files);
+						}
+					}
+				}
+			} 
+		}
+		return $files;
+	}
+
+	/**
+	 * @return InputfieldSelect
+	 * 
+	 */
+	protected function getFilesField() {
+		/** @var InputfieldSelect $field */
+		$field = $this->wire()->modules->get("InputfieldSelect"); 
+		$field->label = $this->_("Select File");
+		$field->attr('id+name', 'link_page_file'); 
+		$files = $this->getFiles();
+		$field->addOption('');
+		$field->addOptions($files); 
+		$field->collapsed = Inputfield::collapsedYes; 
+		if($this->page && $this->page->id) $field->notes = $this->_('Showing files on page:') .  ' **' . $this->page->url . '**';
+		$field->description = 
+			$this->_('Select the file from this page that you want to link to.') . ' ' . 
+			$this->_("To select a file from another page, click 'Select Page' above and choose the page you want to select a file from."); // Instruction on how to select a file from another page
+		$field->icon = 'file-text-o';
+		return $field;
+
+	}
+
+	/**
+	 * Module configuration
+	 * 
+	 * @param InputfieldWrapper $inputfields
+	 * 
+	 */
+	public function getModuleConfigInputfields(InputfieldWrapper $inputfields) {
+		
+		$modules = $this->wire()->modules;
+	
+		/** @var InputfieldFieldset $fieldset */
+		$fieldset = $modules->get('InputfieldFieldset'); 
+		$fieldset->label = $this->_('Attribute options');
+		$fieldset->description = 
+			$this->_('Enter one of attribute `value`, `value=label`, or `value="label"` per line (see notes for details).') . ' ' . 
+			$this->_('The user will be able to select these as options when adding links.') . ' ' .
+			$this->_('To make an option selected by default (for new links), precede the value with a plus “+”.');
+		$fieldset->detail = 
+			$this->_('To include labels, specify `value=label` to show **“value (label)”** for each selectable option.') . ' ' . 
+			$this->_('Or specify `value="label"` (label in quotes) to show just **“label”** (hiding the value) for each selectable option.');
+		$fieldset->icon = 'sliders';
+
+		/** @var InputfieldTextarea $f */
+		$f = $modules->get('InputfieldTextarea');
+		$f->attr('name', 'classOptions');
+		$f->label = 'class';
+		$f->attr('value', $this->classOptions);
+		$f->columnWidth = 34; 
+		$fieldset->add($f);
+
+		/** @var InputfieldTextarea $f */
+		$f = $modules->get('InputfieldTextarea');
+		$f->attr('name', 'relOptions');
+		$f->label = 'rel';
+		$f->attr('value', $this->relOptions);
+		$f->columnWidth = 33; 
+		$fieldset->add($f);
+
+		/** @var InputfieldTextarea $f */
+		$f = $modules->get('InputfieldTextarea');
+		$f->attr('name', 'targetOptions');
+		$f->label = 'target';
+		$f->attr('value', $this->targetOptions);
+		$f->columnWidth = 33; 
+		$fieldset->add($f);
+		$inputfields->add($fieldset); 
+	
+		/** @var InputfieldFieldset $fieldset */
+		$fieldset = $modules->get('InputfieldFieldset');
+		$fieldset->label = $this->_('External link attributes'); 
+		$fieldset->description = $this->_('Specify the default selected attributes that will be automatically populated when an external link is detected.');
+		$fieldset->description .= ' ' . $this->_('If used, the value must be one you have predefined above.'); 
+		$fieldset->icon = 'external-link';
+		$fieldset->collapsed = Inputfield::collapsedBlank;
+
+		/** @var InputfieldText $f */
+		$f = $modules->get('InputfieldText');
+		$f->attr('name', 'extLinkClass');
+		$f->label = 'class';
+		$f->attr('value', $this->extLinkClass);
+		$f->required = false;
+		$f->columnWidth = 34;
+		$fieldset->add($f);
+
+		/** @var InputfieldText $f */
+		$f = $modules->get('InputfieldText');
+		$f->attr('name', 'extLinkRel');
+		$f->notes = $this->_('Example: Specifying **nofollow** would make external links default to be not followed by search engines.');
+		$f->label = 'rel';
+		$f->required = false; 
+		$f->attr('value', $this->extLinkRel);
+		$f->columnWidth = 33; 
+		$fieldset->add($f);
+
+		/** @var InputfieldName $f */
+		$f = $modules->get('InputfieldName');
+		$f->attr('name', 'extLinkTarget');
+		$f->label = 'target';
+		$f->notes = $this->_('Example: Specifying **_blank** would make external links default to open in a new window.'); 
+		$f->attr('value', $this->extLinkTarget);
+		$f->required = false; 
+		$f->columnWidth = 33; 
+		$fieldset->add($f);
+		$inputfields->add($fieldset); 
+	
+		/** @var InputfieldRadios $f */
+		$f = $modules->get('InputfieldRadios'); 
+		$f->attr('name', 'urlType'); 
+		$f->label = $this->_('URL type for page links'); 
+		$f->addOption(self::urlTypeAbsolute, $this->_('Full/absolute path from root (default)')); 
+		$f->addOption(self::urlTypeRelativeBranch, $this->_('Relative URLs in the same branches only') . '*'); 
+		$f->addOption(self::urlTypeRelativeAll, $this->_('Relative URLs always') . '*'); 
+		$f->attr('value', $this->urlType ? $this->urlType : self::urlTypeAbsolute); 
+		$f->notes = $this->_('*Currently experimental'); 
+		$f->collapsed = Inputfield::collapsedYes;
+		$inputfields->add($f);
+
+		/** @var InputfieldCheckbox $f */
+		$f = $modules->get('InputfieldCheckbox');
+		$f->attr('name', 'noLinkTextEdit');
+		$f->label = $this->_('Disable link text edit feature?');
+		$f->description = $this->_('Disables the “Edit Link Text” feature, enabling you to support links that can contain existing markup.');
+		if($this->noLinkTextEdit) {
+			$f->attr('checked', 'checked');
+		} else {
+			$f->collapsed = Inputfield::collapsedYes;
+		}
+		$inputfields->add($f);
+	}
+}

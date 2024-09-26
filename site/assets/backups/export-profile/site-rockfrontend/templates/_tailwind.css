@@ -1,0 +1,10 @@
+/*
+Tailwind Entry Point
+If you are not using TailwindCSS you can remove this file.
+This file is prefixed with _ so that it appears on top of the file list.
+*/
+
+@tailwind base;
+@tailwind utilities;
+
+/* here you can add custom tailwind compound classes via apply */

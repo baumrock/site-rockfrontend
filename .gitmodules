@@ -1,0 +1,12 @@
+[submodule "RockShell"]
+	path = RockShell
+	url = git@github.com:baumrock/RockShell.git
+[submodule "site/modules/RockFrontend"]
+	path = site/modules/RockFrontend
+	url = git@github.com:baumrock/RockFrontend.git
+[submodule "site/modules/AdminStyleRock"]
+	path = site/modules/AdminStyleRock
+	url = git@github.com:baumrock/AdminStyleRock.git
+[submodule "site/modules/RockAdminTweaks"]
+	path = site/modules/RockAdminTweaks
+	url = git@github.com:baumrock/RockAdminTweaks.git

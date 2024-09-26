@@ -1,0 +1,16 @@
+@rf-primary: #00bb86;
+@rf-radius: 0px;
+
+@global-primary-background: @rf-primary;
+@base-selection-background: darken(@rf-primary, 10%);
+
+// dont make <em> text red!
+@base-em-color: @global-color;
+
+// navbar
+.hook-navbar-nav-item-active() {
+  font-weight: bold;
+}
+.hook-navbar-dropdown-nav-item-active() {
+  font-weight: bold;
+}

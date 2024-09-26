@@ -1,0 +1,114 @@
+<?php namespace ProcessWire;
+
+/**
+ * ProcessWire List Process
+ *
+ * Generates a <dl> definition list of Processes attached to each child page. 
+ * 
+ * For more details about how Process modules work, please see: 
+ * /wire/core/Process.php 
+ * 
+ * ProcessWire 3.x, Copyright 2022 by Ryan Cramer
+ * https://processwire.com
+ *
+ *
+ */
+
+class ProcessList extends Process {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => __('List', __FILE__), // getModuleInfo title          
+			'summary' => __('Lists the Process assigned to each child page of the current', __FILE__), // getModuleInfo summary
+			'version' => 101, 
+			'permanent' => true, 
+			'permission' => 'page-view',
+		);
+	}
+
+
+	public function ___execute() {
+		return $this->render();
+	}	
+
+	protected function render() {
+		
+		$modules = $this->wire()->modules;
+		$sanitizer = $this->wire()->sanitizer;
+		
+		$defaults = array(
+			'dlClass' => 'nav',
+			'dtClass' => '',
+			'ddClass' => '',
+			'aClass' => 'label',
+			'disabledClass' => 'ui-priority-secondary',
+			'showIcon' => true, 
+		);
+		
+		$settings = $this->wire()->config->ProcessList;
+		if(!is_array($settings)) $settings = array();
+		$settings = array_merge($defaults, $settings);
+		$out = "\n<dl class='$settings[dlClass]'>";
+		$cnt = 0; 
+		
+		foreach($this->wire()->page->children("check_access=0") as $child) {
+			
+			if(!$child->viewable()) continue;
+			
+			$dtClass = $settings['dtClass'];
+			$ddClass = $settings['ddClass'];
+			$icon = '';
+			
+			if($child->process) {
+				
+				$info = $modules->getModuleInfoVerbose($child->process, array('noCache' => true)); 	
+				if($settings['showIcon']) { 
+					$icon = $child->get('page_icon');
+					if(!$icon) $icon = $info['icon'];
+					if($icon) {
+						$icon = wireIconMarkup("$icon 3x fw ui-priority-secondary style='float:right'"); 
+					}
+				}
+				
+				$title = $child->title;
+				if(!strlen($title)) $title = $info['title'];
+				if(!strlen($title)) $title = $child->name;
+				$titleTranslated = __($title, '/wire/templates-admin/default.php'); 
+				if($titleTranslated && $titleTranslated != $title) $title = $titleTranslated; 
+				$title = $sanitizer->entities1($title); 
+				if($child->summary) {
+					$summary = $child->summary;
+				} else {
+					$summary = $info['summary'];
+				}
+					
+				$summary = $sanitizer->entities1($summary);
+				
+			} else {
+				
+				$title = $child->get("title|name"); 
+				if($child->template == 'admin') {
+					$summary = $this->_('The process module assigned to this page does not appear to be installed.'); 
+					$dtClass .= ' ' . $settings['disabledClass'];
+					$ddClass .= ' ' . $settings['disabledClass'];
+				} else if($child->summary) {
+					$summary = $sanitizer->entities($child->getUnformatted('summary')); 
+				} else {
+					$summary = '<!--' . $this->_('No description available') . '-->';
+				}
+			}
+			
+			$dtClass = trim($dtClass);
+			$ddClass = trim($ddClass);
+			
+			$out .= "\n\t<dt class='$dtClass'><a class='$settings[aClass]' href='{$child->url}'>$icon$title</a></dt>";
+			if($summary) $out .= "\n\t<dd class='$ddClass'>$summary</dd>";
+			$cnt++;
+		}
+
+		$out .= "\n</dl>";
+		if(!$cnt) $out = '';
+		
+		return $out; 
+	}
+}

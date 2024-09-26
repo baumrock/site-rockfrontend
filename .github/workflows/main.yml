@@ -1,0 +1,33 @@
+name: Create Release
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Conventional Changelog Action
+        uses: TriPSs/conventional-changelog-action@v5
+        id: changelog
+        with:
+          preset: "conventionalcommits"
+          github-token: ${{ secrets.CI_TOKEN }}
+          git-user-email: "office@baumrock.com"
+
+      - name: Create zip archive
+        run: |
+          cd site/assets/backups/export-profile/site-rockfrontend
+          zip -r site-rockfrontend.zip .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        with:
+          files: site/assets/backups/export-profile/site-rockfrontend/site-rockfrontend.zip
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}

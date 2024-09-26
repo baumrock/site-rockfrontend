@@ -1,0 +1,94 @@
+<?php namespace ProcessWire;
+
+require_once(__DIR__ . '/InputfieldPageListSelectCommon.php');
+
+/**
+ * A Page List Selector for selecting a single page
+ * 
+ * ProcessWire 3.x, Copyright 2023 by Ryan Cramer
+ * https://processwire.com
+ * 
+ * @property int $parent_id
+ * @property string $labelFieldName
+ * @property string $startLabel
+ * @property string $cancelLabel
+ * @property string $selectLabel
+ * @property string $unselectLabel
+ * @property string $moreLabel
+ * @property bool $showPath
+ *
+ */
+class InputfieldPageListSelect extends Inputfield implements InputfieldPageListSelection {
+	
+	use InputfieldPageListSelectCommon;
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => __('Page List Select', __FILE__), // Module Title
+			'summary' => __('Selection of a single page from a ProcessWire page tree list', __FILE__), // Module Summary
+			'version' => 101,
+			'permanent' => true, 
+		);
+	}
+
+	public function init() {
+		$this->set('parent_id', 0); 
+		$this->set('labelFieldName', 'title'); 
+		$this->set('startLabel', $this->_('Change')); 
+		$this->set('cancelLabel', $this->_('Cancel'));
+		$this->set('selectLabel', $this->_('Select'));
+		$this->set('unselectLabel', $this->_('Unselect'));
+		$this->set('moreLabel', $this->_('More')); 
+		$this->set('showPath', false); 
+		parent::init();
+	}
+
+	public function renderReady(Inputfield $parent = null, $renderValueMode = false) {
+		$this->pageListReady($this->attr('name'), $this->labelFieldName);
+		return parent::renderReady($parent, $renderValueMode);
+	}
+	
+	public function ___render() {
+
+		if(!strlen("$this->parent_id")) return $this->renderParentError();
+	
+		$this->addClass('InputfieldPageListSelectData');
+		$attrs = $this->getAttributes();
+		$attrs['data-root'] = $this->parent_id; 
+		$attrs['data-showPath'] = $this->showPath ? 1 : 0;
+		$attrs['data-allowUnselect'] = $this->required ? 0 : 1;
+		$attrs['data-start'] = $this->startLabel;
+		$attrs['data-select'] = $this->selectLabel;
+		$attrs['data-unselect'] = $this->unselectLabel;
+		$attrs['data-more'] = $this->moreLabel;
+		$attrs['data-cancel'] = $this->cancelLabel;
+		$attrs['data-labelName'] = $this->attr('name');
+
+		$out = "<input type='text' " . $this->getAttributesString($attrs) . " />";
+
+		return $out; 
+	}
+	
+	public function ___renderValue() {
+		return $this->renderMarkupValue($this->val());
+	}
+	
+	public function ___processInput(WireInputData $input) {
+		parent::___processInput($input); 
+		$this->value = (int) $this->value; 
+		return $this; 
+	}
+
+	public function setAttribute($key, $value) {
+		if($key === 'value') {
+			if(is_array($value)) $value = array_shift($value);
+			$value = (int) "$value"; // Page, string or int
+		}
+		return parent::setAttribute($key, $value);
+	}
+	
+	public function isEmpty() {
+		return ((int) $this->attr('value')) < 1;
+	}
+	
+}

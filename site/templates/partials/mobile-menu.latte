@@ -1,0 +1,25 @@
+{* hamburger *}
+<ul class="uk-navbar-nav">
+  <li>
+    <a href="#mobile-menu" uk-toggle="" role="button">
+      <svg width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </a>
+  </li>
+</ul>
+
+{* mobile menu *}
+<div id="mobile-menu" uk-offcanvas="flip: true; overlay: true" class="uk-offcanvas">
+  <div class="uk-offcanvas-bar rf-offcanvas" role="dialog" aria-modal="true">
+
+    <button class="uk-offcanvas-close uk-icon uk-close" type="button" uk-close="" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><line fill="none" stroke="#000" stroke-width="1.1" x1="1" y1="1" x2="13" y2="13"></line><line fill="none" stroke="#000" stroke-width="1.1" x1="13" y1="1" x2="1" y2="13"></line></svg></button>
+
+    <ul class="uk-nav uk-nav-primary uk-margin-top uk-margin-large-bottom">
+      <li n:foreach="$home->children() as $item">
+        <a href="{$item->url}">
+          {$item->title}
+        </a>
+      </li>
+    </ul>
+
+  </div>
+</div>
