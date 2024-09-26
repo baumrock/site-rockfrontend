@@ -37,4 +37,10 @@ $wire->files->copy(
   $config->paths->root
 );
 
+// copy livereload.php to site folder
+$wire->files->copy(
+  __DIR__ . '/assets/livereload.php',
+  $config->paths->site
+);
+
 $installer->ok('Finished installing site profile');
