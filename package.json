@@ -5,5 +5,5 @@
   "scripts": {
     "build": "npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.css"
   },
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

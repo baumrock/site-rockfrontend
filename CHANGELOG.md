@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/baumrock/site-rockfrontend/compare/v1.0.3...v1.0.4) (2024-09-26)
+
+
+### Bug Fixes
+
+* add missing files for finish.php ([9793f5b](https://github.com/baumrock/site-rockfrontend/commit/9793f5bf51374467593b7e7a2af59a3247b4547e))
+
 ## [1.0.3](https://github.com/baumrock/site-rockfrontend/compare/v1.0.2...v1.0.3) (2024-09-26)
 
 
