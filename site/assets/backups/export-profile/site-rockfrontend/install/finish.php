@@ -28,17 +28,17 @@ if (!defined("PROCESSWIRE_INSTALL")) die();
 
 // copy config files to pw root
 wire()->files->copy(
-  __DIR__ . '/assets/tailwind.config.js',
+  __DIR__ . '/../assets/tailwind.config.js',
   $config->paths->root
 );
 wire()->files->copy(
-  __DIR__ . '/assets/package.json',
+  __DIR__ . '/../assets/package.json',
   $config->paths->root
 );
 
 // copy livereload.php to site folder
 wire()->files->copy(
-  __DIR__ . '/assets/livereload.php',
+  __DIR__ . '/../assets/livereload.php',
   $config->paths->site
 );
 
