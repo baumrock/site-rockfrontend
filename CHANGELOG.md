@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/baumrock/site-rockfrontend/compare/v1.0.1...v1.0.2) (2024-09-26)
+
+
+### Bug Fixes
+
+* wrong path ([be1d185](https://github.com/baumrock/site-rockfrontend/commit/be1d1854b70f51da0dcbd7503170e53f19ad37dc))
+
 ## [1.0.1](https://github.com/baumrock/site-rockfrontend/compare/v1.0.0...v1.0.1) (2024-09-26)
 
 
