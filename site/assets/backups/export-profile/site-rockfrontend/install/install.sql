@@ -1,4 +1,4 @@
-# --- WireDatabaseBackup {"time":"2024-09-26 11:33:23","user":"","dbName":"db","description":"","tables":[],"excludeTables":["pages_drafts","pages_roles","permissions","roles","roles_permissions","users","users_roles","user","role","permission"],"excludeCreateTables":[],"excludeExportTables":["field_roles","field_permissions","field_email","field_pass","caches","session_login_throttle","page_path_history"]}
+# --- WireDatabaseBackup {"time":"2024-09-26 21:13:54","user":"","dbName":"db","description":"","tables":[],"excludeTables":["pages_drafts","pages_roles","permissions","roles","roles_permissions","users","users_roles","user","role","permission"],"excludeCreateTables":[],"excludeExportTables":["field_roles","field_permissions","field_email","field_pass","caches","session_login_throttle","page_path_history"]}
 
 DROP TABLE IF EXISTS `caches`;
 CREATE TABLE `caches` (
@@ -99,7 +99,7 @@ CREATE TABLE `field_title` (
   FULLTEXT KEY `data` (`data`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1', 'Home');
+INSERT INTO `field_title` (`pages_id`, `data`) VALUES('1', 'Quickstart');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('2', 'Admin');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('3', 'Pages');
 INSERT INTO `field_title` (`pages_id`, `data`) VALUES('6', 'Add Page');
@@ -304,7 +304,7 @@ INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('175', 
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('187', 'AdminThemeUikit', '10', '{\"logoURL\":\"\",\"cssVersion\":2,\"configPhpHash\":\"43879acd08fa2616b08f3349a3dad97e\",\"useAsLogin\":\"\",\"userAvatar\":\"icon.user-circle\",\"userLabel\":\"{Name}\",\"logoAction\":\"0\",\"layout\":\"\",\"ukGrid\":\"0\",\"maxWidth\":1600,\"groupNotices\":\"1\",\"cssURL\":\"\",\"inputSize\":\"m\",\"noBorderTypes\":[],\"offsetTypes\":[],\"toggleBehavior\":\"1\"}', '2024-03-16 10:17:51');
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('200', 'ProcessLogger', '1', '', '2024-03-16 10:17:52');
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('205', 'InputfieldIcon', '0', '', '2024-03-16 10:17:52');
-INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('275', 'RockFrontend', '3', '{\"livereloadBackend\":1,\"liveReloadModules\":\"\",\"noLayoutFile\":\"\",\"copyLayoutFile\":1,\"layoutFile\":\"layout.latte\",\"ideLinkHandler\":\"cursor:\\/\\/file\\/%file\",\"webfonts\":\"\",\"remBase\":16,\"features\":[\"RockFrontend.js\",\"topbar\"],\"topbarz\":999,\"m_name\":\"\",\"m_theme_color\":\"\",\"m_background_color\":\"\",\"postCssTool\":\"\",\"profile\":\"\",\"uikit\":\"\",\"installTailwind\":1}', '2024-03-16 12:21:06');
+INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('275', 'RockFrontend', '3', '{\"livereloadBackend\":1,\"liveReloadModules\":\"\",\"noLayoutFile\":\"\",\"copyLayoutFile\":1,\"layoutFile\":\"_main.latte\",\"ideLinkHandler\":\"cursor:\\/\\/file\\/%file\",\"webfonts\":\"\",\"remBase\":16,\"features\":[\"RockFrontend.js\",\"topbar\"],\"topbarz\":999,\"m_name\":\"\",\"m_theme_color\":\"\",\"m_background_color\":\"\",\"postCssTool\":\"\",\"profile\":\"\",\"uikit\":\"\",\"installTailwind\":1}', '2024-03-16 12:21:06');
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('280', 'TextformatterMarkdownExtra', '1', '', '2024-03-16 12:21:07');
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('315', 'Less', '0', '', '2024-03-16 15:10:07');
 INSERT INTO `modules` (`id`, `class`, `flags`, `data`, `created`) VALUES('364', 'Site', '3', '', '2024-03-16 15:26:42');
@@ -340,7 +340,7 @@ CREATE TABLE `pages` (
   KEY `published` (`published`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1030 DEFAULT CHARSET=utf8 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1', '0', '1', 'home', '9', '2024-03-25 15:43:49', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
+INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('1', '0', '1', 'home', '9', '2024-09-26 20:04:55', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('2', '1', '2', 'cms', '1035', '2024-07-02 14:00:11', '40', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '7');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('3', '2', '2', 'page', '21', '2024-03-25 11:19:14', '41', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '0');
 INSERT INTO `pages` (`id`, `parent_id`, `templates_id`, `name`, `status`, `modified`, `modified_users_id`, `created`, `created_users_id`, `published`, `sort`) VALUES('6', '3', '2', 'add', '21', '2024-03-16 10:17:52', '40', '2024-03-16 10:17:38', '41', '2024-03-16 10:17:38', '1');
@@ -474,12 +474,12 @@ CREATE TABLE `templates` (
   KEY `fieldgroups_id` (`fieldgroups_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=utf8 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('1', 'home', '1', '0', '0', '{\"useRoles\":1,\"editRoles\":[1025],\"addRoles\":[1025],\"createRoles\":[1025],\"noParents\":1,\"slashUrls\":1,\"compile\":0,\"modified\":1726437207,\"ns\":\"\\\\\",\"_lazy\":1,\"roles\":[37,1025]}');
-INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('2', 'admin', '2', '8', '0', '{\"useRoles\":1,\"parentTemplates\":[2],\"allowPageNum\":1,\"redirectLogin\":23,\"slashUrls\":1,\"noGlobal\":1,\"compile\":3,\"modified\":1726437207,\"ns\":\"ProcessWire\",\"_lazy\":1}');
+INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('1', 'home', '1', '0', '0', '{\"useRoles\":1,\"editRoles\":[1025],\"addRoles\":[1025],\"createRoles\":[1025],\"noParents\":1,\"slashUrls\":1,\"compile\":0,\"modified\":1727374743,\"ns\":\"\\\\\",\"_lazy\":1,\"roles\":[37,1025]}');
+INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('2', 'admin', '2', '8', '0', '{\"useRoles\":1,\"parentTemplates\":[2],\"allowPageNum\":1,\"redirectLogin\":23,\"slashUrls\":1,\"noGlobal\":1,\"compile\":3,\"modified\":1727346886,\"ns\":\"ProcessWire\",\"_lazy\":1}');
 INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('3', 'user', '3', '8', '0', '{\"useRoles\":1,\"noChildren\":1,\"parentTemplates\":[2],\"slashUrls\":1,\"pageClass\":\"User\",\"noGlobal\":1,\"noMove\":1,\"noTrash\":1,\"noSettings\":1,\"noChangeTemplate\":1,\"nameContentTab\":1}');
 INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('4', 'role', '4', '8', '0', '{\"noChildren\":1,\"parentTemplates\":[2],\"slashUrls\":1,\"pageClass\":\"Role\",\"noGlobal\":1,\"noMove\":1,\"noTrash\":1,\"noSettings\":1,\"noChangeTemplate\":1,\"nameContentTab\":1}');
 INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('5', 'permission', '5', '8', '0', '{\"noChildren\":1,\"parentTemplates\":[2],\"slashUrls\":1,\"guestSearchable\":1,\"pageClass\":\"Permission\",\"noGlobal\":1,\"noMove\":1,\"noTrash\":1,\"noSettings\":1,\"noChangeTemplate\":1,\"nameContentTab\":1}');
-INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('29', 'basic-page', '83', '0', '0', '{\"slashUrls\":1,\"compile\":3,\"modified\":1726437207,\"ns\":\"\\\\\",\"_lazy\":1}');
+INSERT INTO `templates` (`id`, `name`, `fieldgroups_id`, `flags`, `cache_time`, `data`) VALUES('29', 'basic-page', '83', '0', '0', '{\"slashUrls\":1,\"compile\":3,\"modified\":1727346886,\"ns\":\"\\\\\",\"_lazy\":1}');
 
 UPDATE pages SET created_users_id=41, modified_users_id=41, created=NOW(), modified=NOW();
 

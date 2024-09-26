@@ -6,16 +6,53 @@
 <main>
   <div class="uk-container uk-section-small">
     <h1>{$page->title}</h1>
-    <div class='uk-alert uk-alert-warning text-orange-600 border-orange-600' style='border:2px solid'>
-      <p style='margin-top:0px;'>Note: To finish the installation you have to run this command on the command line in the root directory of your project:</p>
-      <pre><code>npm install -D</code></pre>
-      <p>Once that is done either execute the RockShell command "pw:setup" or just copy this to your site config (make sure to add this only on your development config, not on production!):</p>
-      <pre><code>$config->livereload = 1;</code></pre>
-      <p>Then open the browsers devtools and reload this page. You should see this in your console:</p>
-      <pre><code>Loading LiveReload
-RockFrontend is listening for file changes...</code></pre>
-      <p>Then add the class "bg&#45;red&#45;500" to the &lt;h1&gt; tag in /site/templates/sections/main.latte; RockFrontend should reload the browser and the headline above should get a red background, which means that LiveReload + Tailwind is working 😎🚀</p>
-      <p>You can now remove this note and start developing your dream project. Enjoy!</p>
-    </div>
+
+    <h2>Hello World</h2>
+
+    <ul uk-accordion>
+      <li class="uk-open">
+        <a class="uk-accordion-title" href>Latte</a>
+        <div class="uk-accordion-content uk-alert uk-margin-remove-bottom">
+          <p>Latte is a great template engine by Nette - the folks behind TracyDebugger! See <a href='https://latte.nette.org/en/guide'>Getting Started with Latte</a> and also <a href='https://processwire.com/talk/topic/27367-why-i-love-the-latte-template-engine/'>Why I love the Latte Template Engine</a>.</p>
+
+          <p>See <a href='https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/latte/'>docs</a> for further details.</p>
+        </div>
+      </li>
+      <li>
+        <a class="uk-accordion-title" href>LiveReload</a>
+        <div class="uk-accordion-content uk-alert uk-margin-remove-bottom">
+          <p>LiveReload should already be working. Try changing <code>Hello World</code> in <code>/site/templates/sections/main.latte</code> to <code>Hello Universe</code> and see if the browser reloads automatically.</p>
+
+          <p>See <a href='https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/livereload/'>docs</a> for further details.</p>
+        </div>
+      </li>
+      <li>
+        <a class="uk-accordion-title" href>UIkit</a>
+        <div class="uk-accordion-content uk-alert uk-margin-remove-bottom">
+          <p>UIkit is loaded in <code>/site/templates/_init.php</code> and ready to use. You can go ahead and copy and paste examples from their <a href='https://getuikit.com/docs/'>docs</a>.</p>
+
+          <p>You can also modify UIkit LESS variables easily. Just edit <code>/site/templates/styles/_custom.less</code> and change the color for muted background to a light red: <pre><code>@global-muted-background: #f7a3a3;</code></pre></p>
+
+          <p>LiveReload should automatically reload the page and UIkit LESS files should automatically be compiled to CSS.</p>
+
+          <p>See <a href='https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/uikit/'>docs</a> for further details.</p>
+        </div>
+      </li>
+      <li>
+        <a class="uk-accordion-title" href>TailwindCSS</a>
+        <div class="uk-accordion-content uk-alert uk-margin-remove-bottom">
+          <p>To use TailwindCSS, you need to install it first. All you have to do is run this command in the root directory of your project: <pre><code>npm install -D</code></pre></p>
+
+          <p>This will install all dependencies listed in <a href='https://github.com/baumrock/site-rockfrontend/blob/main/site/assets/backups/export-profile/site-rockfrontend/install/assets/package.json'>package.json</a> and add the <code>npm run build</code> command that will compile TailwindCSS to CSS for the browser.</p>
+
+          <p>Note: If livereload is enabled RockFrontend will automatically load the file <code>/site/livereload.php</code> on every reload. This file will then run <code>npm run build</code> via PHP's exec function. You can remove this file if you want to use your own build scripts or watchers.</p>
+
+          <p>Tailwind Example: Try adding <code>class='bg-red-500 p-5'</code> to the <code>Hello World</code> heading in <code>/site/templates/sections/main.latte</code>.</p>
+
+          <p>See <a href='https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/tailwind/'>docs</a> for further details.</p>
+        </div>
+      </li>
+    </ul>
+
   </div>
 </main>

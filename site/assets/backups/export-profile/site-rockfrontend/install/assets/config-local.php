@@ -4,6 +4,12 @@ namespace ProcessWire;
 
 /** @var Config $config */
 
+/**
+ * Local config for development
+ * DO NOT USE THIS FILE IN PRODUCTION!
+ * DO NOT ADD THIS FILE TO GIT!
+ */
+
 $config->debug = true;
 $config->advanced = true;
 $config->userAuthSalt = '{salt}';

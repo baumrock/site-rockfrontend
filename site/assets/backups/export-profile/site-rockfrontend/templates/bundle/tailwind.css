@@ -112,14 +112,13 @@ This file is prefixed with _ so that it appears on top of the file list.
   --tw-contain-style:  
 }
 
-.border-orange-600 {
-  --tw-border-opacity: 1;
-  border-color: rgb(234 88 12 / var(--tw-border-opacity))
+.bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity))
 }
 
-.text-orange-600 {
-  --tw-text-opacity: 1;
-  color: rgb(234 88 12 / var(--tw-text-opacity))
+.p-5 {
+  padding: 1.25rem
 }
 
 /* here you can add custom tailwind compound classes via apply */
