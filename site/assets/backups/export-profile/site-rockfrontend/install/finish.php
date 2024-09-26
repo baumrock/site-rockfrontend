@@ -22,24 +22,19 @@ namespace ProcessWire;
 if (!defined("PROCESSWIRE_INSTALL")) die();
 
 /** @var Installer $installer */
+/** @var ProcessWire $wire */
 /** @var Pages $pages */
 /** @var User $user */
 // …and so on for other API variables
 
 // copy config files to pw root
-wire()->files->copy(
+$wire->files->copy(
   __DIR__ . '/assets/tailwind.config.js',
   $config->paths->root
 );
-wire()->files->copy(
+$wire->files->copy(
   __DIR__ . '/assets/package.json',
   $config->paths->root
-);
-
-// copy livereload.php to site folder
-wire()->files->copy(
-  __DIR__ . '/assets/livereload.php',
-  $config->paths->site
 );
 
 $installer->ok('Finished installing site profile');
