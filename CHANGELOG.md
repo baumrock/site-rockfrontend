@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/baumrock/site-rockfrontend/compare/v1.0.2...v1.0.3) (2024-09-26)
+
+
+### Bug Fixes
+
+* wrong paths in finish.php ([9c0db8b](https://github.com/baumrock/site-rockfrontend/commit/9c0db8bd26f1dc99c1a0ca967809401b97425313))
+
 ## [1.0.2](https://github.com/baumrock/site-rockfrontend/compare/v1.0.1...v1.0.2) (2024-09-26)
 
 
