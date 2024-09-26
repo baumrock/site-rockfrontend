@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/baumrock/site-rockfrontend/compare/v1.0.6...v1.1.0) (2024-09-26)
+
+
+### Features
+
+* add config-local and gitignore to finish.php ([5733417](https://github.com/baumrock/site-rockfrontend/commit/5733417e27b8353f93bbaeadde5f5deb9712b9a7))
+
 ## [1.0.6](https://github.com/baumrock/site-rockfrontend/compare/v1.0.5...v1.0.6) (2024-09-26)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * wrong paths in finish.php ([9c0db8b](https://github.com/baumrock/site-rockfrontend/commit/9c0db8bd26f1dc99c1a0ca967809401b97425313))
-
-## [1.0.2](https://github.com/baumrock/site-rockfrontend/compare/v1.0.1...v1.0.2) (2024-09-26)
-
-
-### Bug Fixes
-
-* wrong path ([be1d185](https://github.com/baumrock/site-rockfrontend/commit/be1d1854b70f51da0dcbd7503170e53f19ad37dc))
 
