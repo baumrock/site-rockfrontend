@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/baumrock/site-rockfrontend/compare/v1.0.5...v1.0.6) (2024-09-26)
+
+
+### Bug Fixes
+
+* also copy livereload on install ([8745b55](https://github.com/baumrock/site-rockfrontend/commit/8745b55c2c2b39fe317723203ff5592b5c9527c4))
+
 ## [1.0.5](https://github.com/baumrock/site-rockfrontend/compare/v1.0.4...v1.0.5) (2024-09-26)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * wrong path ([be1d185](https://github.com/baumrock/site-rockfrontend/commit/be1d1854b70f51da0dcbd7503170e53f19ad37dc))
-
-## [1.0.1](https://github.com/baumrock/site-rockfrontend/compare/v1.0.0...v1.0.1) (2024-09-26)
-
-
-### Bug Fixes
-
-* change content of zip fore easier rockshell pw:install command ([e732a98](https://github.com/baumrock/site-rockfrontend/commit/e732a989e4b7bcb08688d7a5fc10e95250bcc6a0))
 
