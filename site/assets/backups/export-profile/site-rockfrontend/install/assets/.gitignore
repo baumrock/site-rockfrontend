@@ -1,0 +1,37 @@
+### exclude all assets but keep folders
+/site/assets/cache/*
+/site/assets/sessions/*
+/site/assets/logs/*
+/site/assets/backups/*
+!site/assets/*/.htaccess
+
+### exclude all files but keep README.txt
+/site/assets/files/*
+!site/assets/files/README.txt
+
+## keep files of given page (eg language files)
+## this is only an example!
+#!/site/assets/files/1020
+
+## keep rockshell db dumps
+!/site/assets/backups/db.sql
+
+## ignore procache
+site/assets/ProCache-*
+site/assets/pwpc
+
+## ignore custom config files
+/site/config-*.php
+
+## ignore updated module backups
+/site/modules/.*
+
+## frontend
+/node_modules
+
+## ignore ddev folder but keep the config
+.ddev
+!.ddev/config.yaml
+
+# ignore vscode snippets
+.vscode

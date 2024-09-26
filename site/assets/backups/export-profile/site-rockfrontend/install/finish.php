@@ -43,4 +43,34 @@ $wire->files->copy(
   $config->paths->site
 );
 
+// copy config-local.php to site folder
+$local = $wire->files->fileGetContents(__DIR__ . '/assets/config-local.php');
+$wire->files->filePutContents(
+  $config->paths->site . 'config-local.php',
+  str_replace(
+    ['{salt}', '{host}'],
+    [
+      $config->userAuthSalt,
+      @$config->httpHosts[0],
+    ],
+    $local
+  )
+);
+$wire->files->filePutContents(
+  $config->paths->site . 'config.php',
+  "\n\n" .
+    "/**\n" .
+    " * Split Config Pattern\n" .
+    " * See https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/config/\n" .
+    " */\n" .
+    "require __DIR__ . \"/config-local.php\";\n",
+  FILE_APPEND
+);
+
+// copy .gitignore to root folder
+$wire->files->copy(
+  __DIR__ . '/assets/.gitignore',
+  $config->paths->root
+);
+
 $installer->ok('Finished installing site profile');
