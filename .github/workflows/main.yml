@@ -28,6 +28,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: ${{ steps.changelog.outputs.skipped == 'false' }}
         with:
-          files: site/assets/backups/export-profile/site-rockfrontend/site-rockfrontend.zip
+          files: site/assets/backups/export-profile/site-rockfrontend.zip
           tag_name: ${{ steps.changelog.outputs.tag }}
           body: ${{ steps.changelog.outputs.clean_changelog }}
