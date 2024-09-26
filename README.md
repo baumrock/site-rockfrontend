@@ -1,6 +1,15 @@
 # RockFrontend Site Profile
 
-## Installed Modules
+Minimalistic but very powerful site profile for the ProcessWire CMS that combines the magic of
 
-You can see the list of installed modules here: https://github.com/baumrock/site-rockfrontend/tree/main/site/assets/backups/export-profile/site-rockfrontend/modules
+- Latte Templating Engine
+- LiveReload
+- UIkit CSS Framework
+- Tailwind CSS
+- and much more!
 
+After installation you will see a Quickstart guide that explains the basic concepts:
+
+<img src=https://i.imgur.com/ntlrdqz.png width=500>
+
+Further docs can be found at https://www.baumrock.com/en/processwire/modules/site-rockfrontend/docs/
