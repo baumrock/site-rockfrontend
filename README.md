@@ -1,5 +1,6 @@
-# RockFrontend Site Profile DEVELOPMENT BRANCH
+# RockFrontend Site Profile
 
-This branch is the internal project used to keep the RockFrontend site profile up to date. On every commit the RockFrontend site profile will be deployed to the main branch.
+## Installed Modules
 
-The development branch uses Git Submodules to make it easy for me to pull updates and push changes when I need to. The site profile does not use submodules so that everybody can use it without this advanced setup.
+You can see the list of installed modules here: https://github.com/baumrock/site-rockfrontend/tree/main/site/assets/backups/export-profile/site-rockfrontend/modules
+
