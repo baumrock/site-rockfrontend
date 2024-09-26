@@ -1,3 +1,10 @@
+## [1.2.0](https://github.com/baumrock/site-rockfrontend/compare/v1.1.0...v1.2.0) (2024-09-26)
+
+
+### Features
+
+* update quickstart instructions ([64e0465](https://github.com/baumrock/site-rockfrontend/commit/64e046583c9977a73a6aa411de9256471da4540d))
+
 ## [1.1.0](https://github.com/baumrock/site-rockfrontend/compare/v1.0.6...v1.1.0) (2024-09-26)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * add missing files for finish.php ([9793f5b](https://github.com/baumrock/site-rockfrontend/commit/9793f5bf51374467593b7e7a2af59a3247b4547e))
-
-## [1.0.3](https://github.com/baumrock/site-rockfrontend/compare/v1.0.2...v1.0.3) (2024-09-26)
-
-
-### Bug Fixes
-
-* wrong paths in finish.php ([9c0db8b](https://github.com/baumrock/site-rockfrontend/commit/9c0db8bd26f1dc99c1a0ca967809401b97425313))
 
