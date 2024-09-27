@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/baumrock/site-rockfrontend/compare/v1.3.0...v1.3.1) (2024-09-27)
+
+
+### Bug Fixes
+
+* wrong path for autoload docs ([9e818cf](https://github.com/baumrock/site-rockfrontend/commit/9e818cf51991154de160110181591dafa05f3f18))
+
 ## [1.3.0](https://github.com/baumrock/site-rockfrontend/compare/v1.2.0...v1.3.0) (2024-09-27)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * also copy livereload on install ([8745b55](https://github.com/baumrock/site-rockfrontend/commit/8745b55c2c2b39fe317723203ff5592b5c9527c4))
-
-## [1.0.5](https://github.com/baumrock/site-rockfrontend/compare/v1.0.4...v1.0.5) (2024-09-26)
-
-
-### Bug Fixes
-
-* move assets to correct path ([2da554d](https://github.com/baumrock/site-rockfrontend/commit/2da554decee1fc5127670d149bb24ef2237aef93))
 
