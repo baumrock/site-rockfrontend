@@ -1,3 +1,10 @@
+## [1.3.0](https://github.com/baumrock/site-rockfrontend/compare/v1.2.0...v1.3.0) (2024-09-27)
+
+
+### Features
+
+* add custom layout example ([747e956](https://github.com/baumrock/site-rockfrontend/commit/747e95602546d8dcadb33ba58354b7b967002f66))
+
 ## [1.2.0](https://github.com/baumrock/site-rockfrontend/compare/v1.1.0...v1.2.0) (2024-09-26)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * move assets to correct path ([2da554d](https://github.com/baumrock/site-rockfrontend/commit/2da554decee1fc5127670d149bb24ef2237aef93))
-
-## [1.0.4](https://github.com/baumrock/site-rockfrontend/compare/v1.0.3...v1.0.4) (2024-09-26)
-
-
-### Bug Fixes
-
-* add missing files for finish.php ([9793f5b](https://github.com/baumrock/site-rockfrontend/commit/9793f5bf51374467593b7e7a2af59a3247b4547e))
 
