@@ -68,9 +68,11 @@ $wire->files->filePutContents(
 );
 
 // copy .gitignore to root folder
+// don't use .gitignore name because it will be removed
+// after installation if the checkbox is checked
 $wire->files->copy(
   __DIR__ . '/assets/.gitignore',
-  $config->paths->root
+  $config->paths->root . '.gitignore.example'
 );
 
 $installer->ok('Finished installing site profile');
