@@ -1,3 +1,11 @@
+## [1.3.2](https://github.com/baumrock/site-rockfrontend/compare/v1.3.1...v1.3.2) (2024-10-09)
+
+
+### Bug Fixes
+
+* missing "not" in docs ([85b3864](https://github.com/baumrock/site-rockfrontend/commit/85b38646a295317a7b9f4a2ee84640be329d19cd))
+* rename gitignore in finish.php ([6b0c438](https://github.com/baumrock/site-rockfrontend/commit/6b0c438cd5295b6bb32ed4f4111c583559dc5506))
+
 ## [1.3.1](https://github.com/baumrock/site-rockfrontend/compare/v1.3.0...v1.3.1) (2024-09-27)
 
 
@@ -25,11 +33,4 @@
 ### Features
 
 * add config-local and gitignore to finish.php ([5733417](https://github.com/baumrock/site-rockfrontend/commit/5733417e27b8353f93bbaeadde5f5deb9712b9a7))
-
-## [1.0.6](https://github.com/baumrock/site-rockfrontend/compare/v1.0.5...v1.0.6) (2024-09-26)
-
-
-### Bug Fixes
-
-* also copy livereload on install ([8745b55](https://github.com/baumrock/site-rockfrontend/commit/8745b55c2c2b39fe317723203ff5592b5c9527c4))
 
