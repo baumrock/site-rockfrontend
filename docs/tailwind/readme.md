@@ -119,4 +119,4 @@ corePlugins: {
 },
 ```
 
-This tells TailwindCSS to use preflight mode, which is necessary to avoid conflicts with UIkit. Please see https://tailwindcss.com/docs/preflight#disabling-preflight for more information.
+This tells TailwindCSS not to use preflight mode, which is necessary to avoid conflicts with UIkit. Please see https://tailwindcss.com/docs/preflight#disabling-preflight for more information.
