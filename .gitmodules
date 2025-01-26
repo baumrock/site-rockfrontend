@@ -10,3 +10,6 @@
 [submodule "site/modules/RockAdminTweaks"]
 	path = site/modules/RockAdminTweaks
 	url = git@github.com:baumrock/RockAdminTweaks.git
+[submodule "site/modules/RockDevTools"]
+	path = site/modules/RockDevTools
+	url = git@github.com:baumrock/RockDevTools.git
