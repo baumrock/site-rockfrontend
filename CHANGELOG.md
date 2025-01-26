@@ -1,3 +1,17 @@
+## [1.4.0](https://github.com/baumrock/site-rockfrontend/compare/v1.3.2...v1.4.0) (2025-01-26)
+
+
+### Features
+
+* update assets and config ([08a91b1](https://github.com/baumrock/site-rockfrontend/commit/08a91b1dcc9666404db3302272148b4ee6371081))
+* update site profile to use rockdevtools ([f724b65](https://github.com/baumrock/site-rockfrontend/commit/f724b658874f0afc4aabdddc14c7b6d4bd716a98))
+* use new scriptTag() and styleTag() methods ([6888628](https://github.com/baumrock/site-rockfrontend/commit/68886282cc89f01eed7cd409454ea23eb0826554))
+
+
+### Bug Fixes
+
+* remove default defer attribute ([eb1a5c6](https://github.com/baumrock/site-rockfrontend/commit/eb1a5c62177c29e740bfd387bc64d5c4eb1d1560))
+
 ## [1.3.2](https://github.com/baumrock/site-rockfrontend/compare/v1.3.1...v1.3.2) (2024-10-09)
 
 
@@ -26,11 +40,4 @@
 ### Features
 
 * update quickstart instructions ([64e0465](https://github.com/baumrock/site-rockfrontend/commit/64e046583c9977a73a6aa411de9256471da4540d))
-
-## [1.1.0](https://github.com/baumrock/site-rockfrontend/compare/v1.0.6...v1.1.0) (2024-09-26)
-
-
-### Features
-
-* add config-local and gitignore to finish.php ([5733417](https://github.com/baumrock/site-rockfrontend/commit/5733417e27b8353f93bbaeadde5f5deb9712b9a7))
 
