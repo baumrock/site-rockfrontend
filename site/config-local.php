@@ -17,8 +17,9 @@ $config->tableSalt = '12345';
 $config->httpHosts = ['site-rockfrontend.ddev.site'];
 $config->sessionFingerprint = false;
 
-// RockFrontend
-$config->livereload = 1;
+// RockDevTools
+$config->rockdevtools = true;
+$config->livereload = true;
 
 // RockMigrations
 // $config->filesOnDemand = 'https://your-live.site/';
@@ -33,5 +34,5 @@ $config->tracy = [
   'forceIsLocal' => true,
   'localRootPath' => getenv("TRACY_LOCALROOTPATH"),
   'numLogEntries' => 100, // for RockMigrations
-  'editor' => 'cursor://file/%file:%line',
+  'editor' => 'windsurf://file/%file:%line',
 ];
