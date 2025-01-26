@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {rockfrontend()->styleTag('/site/templates/dst/styles.min.css')|noescape}
+  {rockfrontend()->scriptTag('/site/templates/dst/scripts.min.js', 'defer')|noescape}
 </head>
 <body>
   {include "sections/header.latte"}

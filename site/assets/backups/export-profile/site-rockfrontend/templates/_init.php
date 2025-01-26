@@ -6,22 +6,32 @@ namespace ProcessWire;
 // This is defined by $config->prependTemplateFile in /site/config.php.
 // Use this to define shared variables, functions, classes, includes, etc.
 
-$rf = rockfrontend();
+// during development, use RockDevTools to parse, merge and minify assets
+// on production, we will just include the minified files in _main.latte
+if ($config->rockdevtools) {
+  $devtools = rockdevtools();
 
-$rf->styles()
-  // add the base uikit theme
-  ->add('/site/templates/uikit/src/less/uikit.theme.less')
-  // add default folders like /sections and /partials
-  ->addDefaultFolders()
-  // add the bundled tailwind utility classes
-  ->add('/site/templates/bundle/tailwind.css')
-  // minify on production
-  ->minify($config->debug ? false : true);
+  // force recreating of minified files on every request
+  // $devtools->debug = true;
 
-$rf->scripts()
-  // load uikit (without defer to avoid FOUC)
-  ->add('/site/templates/uikit/dist/js/uikit.min.js')
-  // load custom javascript of this project
-  ->add('/site/templates/scripts/main.js', 'defer')
-  // minify on production
-  ->minify($config->debug ? false : true);
+  // parse all less files to css
+  $devtools->assets()
+    ->less()
+    ->add('/site/templates/uikit/src/less/uikit.theme.less')
+    ->add('/site/templates/src/*.less')
+    ->save('/site/templates/src/.styles.css');
+
+  // merge and minify css files
+  $devtools->assets()
+    ->css()
+    ->add('/site/templates/src/.styles.css')
+    ->add('/site/templates/src/.tailwind.css')
+    ->save('/site/templates/dst/styles.min.css');
+
+  // merge and minify JS files
+  $devtools->assets()
+    ->js()
+    ->add('/site/templates/uikit/dist/js/uikit.min.js')
+    ->add('/site/templates/scripts/main.js')
+    ->save('/site/templates/dst/scripts.min.js');
+}
