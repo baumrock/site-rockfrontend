@@ -2,6 +2,7 @@
 
 namespace RockDevTools;
 
+use Nette\Utils\FileInfo;
 use ProcessWire\HookEvent;
 use ProcessWire\Wire;
 use Tracy\Debugger;
@@ -11,8 +12,6 @@ use function ProcessWire\wire;
 
 class LiveReload extends Wire
 {
-  private $watchedFiles;
-
   public function __construct()
   {
     wire()->addHookBefore('Session::init', $this, 'addSSE');
@@ -20,6 +19,7 @@ class LiveReload extends Wire
 
   public function addBlueScreenPanel(): void
   {
+    if (!wire()->modules->isInstalled('TracyDebugger')) return;
     $blueScreen = Debugger::getBlueScreen();
     $blueScreen->addPanel(function () {
       return [
@@ -49,11 +49,17 @@ class LiveReload extends Wire
 
   public function filesToWatch(): array
   {
-    if ($this->watchedFiles) return $this->watchedFiles;
+    // note: do not cache files to watch
+    // to make sure newly created files trigger a reload
     require dirname(__DIR__) . '/src/livereload.php';
     $configfile = wire()->config->paths->site . 'config-livereload.php';
     if (is_file($configfile)) require $configfile;
-    return $this->watchedFiles = $files->toArray();
+    $arr = [];
+    foreach ($files->collect() as $file) {
+      /** @var FileInfo $file */
+      $arr[] = (string)$file;
+    }
+    return $arr;
   }
 
   public function findModifiedFile(int $since): string|false

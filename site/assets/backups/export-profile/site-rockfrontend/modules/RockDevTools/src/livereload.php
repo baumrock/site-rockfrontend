@@ -2,21 +2,37 @@
 
 namespace RockDevTools;
 
+use Nette\Utils\Finder;
+
+use function ProcessWire\wire;
+
 /**
  * List of files to watch for changes
  * use bd(rockdevtools()->livereload->filesToWatch()) to inspect
  */
 
-$files = (new FilenameArray())
-  // watch files in root folder
-  ->add('*.*')
-  // watch files in /site folder
-  ->add('/site/*.php')
-  // watch files in /site/templates folder recursively
-  ->add('/site/templates/**.{css,js,less,php}', 4)
-  // watch latte files in /site/templates folder recursively (6 levels)
-  ->add('/site/templates/**.latte', 6)
-  // watch all assets in /site/modules
-  ->add('/site/modules/**.{css,js,less,php,latte}', 4)
-  // do not watch uikit files
-  ->remove('/site/templates/uikit/**.*');
+$files = Finder::findFiles([
+  '*.php',
+  '*.module',
+  '*.js',
+  '*.css',
+  '*.latte',
+  '*.twig',
+  '*.less',
+])
+  ->from(wire()->config->paths->root)
+  ->exclude('wire/*')
+  ->exclude('.*/*')
+  ->exclude('node_modules/*')
+  ->exclude('site/assets/backups/*')
+  ->exclude('site/assets/cache/*')
+  ->exclude('site/assets/files/*')
+  ->exclude('site/assets/logs/*')
+  ->exclude('*/lib/*')
+  ->exclude('*/dist/*')
+  ->exclude('*/dst/*')
+  ->exclude('*/build/*')
+  ->exclude('*/uikit/src/*')
+  ->exclude('*/TracyDebugger/tracy-*')
+  ->exclude('*/TracyDebugger/scripts/*')
+  ->exclude('*/vendor/*');

@@ -13,6 +13,7 @@ use RockFrontend\Asset;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
 use RockFrontend\Seo;
+use RockFrontend\Toolbar;
 use RockPageBuilder\Block;
 use Sabberworm\CSS\OutputFormat;
 use Sabberworm\CSS\Parser;
@@ -151,6 +152,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private $sitemapCallback;
   private $sitemapOptions;
 
+  /** @var Toolbar */
+  private $toolbar;
+
   /** @var array */
   private $translations = [];
 
@@ -199,7 +203,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) {
       $rm->watch($this, 0.01);
-      $rm->minify(__DIR__ . '/RockFrontend.js');
     }
 
     // setup folders that are scanned for files
@@ -226,7 +229,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       self::permission_alfred,
       "Is allowed to use ALFRED frontend editing"
     );
-    $this->lessToCss($this->path . "Alfred.less");
 
     // hooks
     wire()->addHookAfter("ProcessPageEdit::buildForm",   $this, "hideLayoutField");
@@ -243,14 +245,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // others
     $this->checkHealth();
 
-    // development helpers by rockmigrations
-    if ($this->wire->modules->isInstalled('RockMigrations')) {
-      try {
-        $rm = rockmigrations();
-        $rm->minify(__DIR__ . "/Alfred.js");
-      } catch (\Throwable $th) {
-        $this->warning("rockmigrations() not available - please update RockMigrations!");
-      }
+    // rockdevtools
+    if (
+      wire()->config->rockdevtools
+      && wire()->modules->isInstalled('RockDevTools')
+    ) {
+      rockdevtools()->assets()->minify(__DIR__ . '/src', __DIR__ . '/dst');
     }
   }
 
@@ -297,13 +297,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function addAlfredMarkup(string $html, $skipAssets = false): string
   {
     if (!$this->loadAlfred()) return $html;
-
-    if (!$skipAssets) {
-      $this->js("rootUrl", $this->wire->config->urls->root);
-      $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js", "defer");
-      $this->addAlfredStyles();
-    }
 
     // replace alfred cache markup
     // if alfred was added without |noescape it has quotes around
@@ -442,11 +435,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         );
       }
     );
-  }
-
-  public function ___addAlfredStyles()
-  {
-    $this->styles('rockfrontend')->add($this->path . "Alfred.css", "", ['minify' => false]);
   }
 
   /**
@@ -941,6 +929,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $dir . trim($path, "/");
   }
 
+  public function assets(): string
+  {
+    if (!wire()->user->isLoggedin()) return '';
+    $this->js("rootUrl", wire()->config->urls->root);
+    $markup = '';
+    $url = wire()->config->urls($this);
+    $markup .= $this->scriptTag($url . 'dst/Alfred.min.js', 'defer');
+    $markup .= $this->styleTag($url . 'dst/Alfred.min.css');
+    // if adminstylerock is installed we add alfred overrides
+    if (wire()->modules->isInstalled('AdminStyleRock')) {
+      $url = wire()->config->urls->siteModules;
+      $markup .= $this->styleTag($url . 'AdminStyleRock/dst/alfred.min.css');
+    }
+    return $markup;
+  }
+
   /**
    * Auto-prepend file before rendering for exposing variables from _init.php
    */
@@ -1175,7 +1179,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     $rootPath = getenv("TRACY_LOCALROOTPATH") ?: $rootPath;
-    $editor = getenv("TRACY_EDITOR") ?: $editor;
 
     $rootPath = rtrim($rootPath, "/") . "/";
     $link = str_replace($this->wire->config->paths->root, $rootPath, $path);
@@ -1672,7 +1675,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'style' => 'text-align: center; margin: 20px 0;',
     ]);
     $opt->setArray($options);
-    $url = rtrim($this->wire->config->urls($this), "/");
+    $url = rtrim(wire()->config->urls($this), "/");
     $title = $opt->title ? "title='{$opt->title}' uk-tooltip" : "";
     return "<div class='{$opt->wrapClass}' style='{$opt->style}'>
       <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
@@ -2605,6 +2608,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->wire->modules->get('RockMigrations');
   }
 
+  public function scripts($name = 'main')
+  {
+    throw new WireException("This feature has been removed with version 5 - please see upgrade guide at baumrock.com/rf-upgrade5");
+  }
+
   /**
    * Return a script tag for a given url
    *
@@ -2617,9 +2625,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function scriptTag($url, $suffix = ''): string
+  public function scriptTag($url, $suffix = '', $versionType = true): string
   {
-    $src = wire()->config->versionUrl($url);
+    $src = wire()->config->versionUrl($url, $versionType);
     return "<script src='$src' $suffix></script>";
   }
 
@@ -2781,6 +2789,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (is_file($file)) wire()->files->unlink($file);
   }
 
+  public function styles($name = 'main', $cssDir = null)
+  {
+    throw new WireException("This feature has been removed with version 5 - please see upgrade guide at baumrock.com/rf-upgrade5");
+  }
+
   /**
    * Get style tag
    *
@@ -2791,9 +2804,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function styleTag($url): string
+  public function styleTag($url, $versionType = true): string
   {
-    $href = wire()->config->versionUrl($url);
+    $href = wire()->config->versionUrl($url, $versionType);
     return "<link rel='stylesheet' href='$href' />";
   }
 
@@ -2862,6 +2875,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $dom = $this->dom($str)->filter("svg")->first();
     return $dom;
+  }
+
+  public function toolbar(): Toolbar
+  {
+    if (!$this->toolbar) $this->toolbar = new Toolbar();
+    return $this->toolbar;
   }
 
   /**
@@ -3239,7 +3258,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'features';
     $f->label = "Features";
     $f->icon = "star-o";
-    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
+    $f->addOption('topbar', 'topbar - DEPRECATED! Use the new toolbar instead.');
     $f->value = (array)$this->features;
     $fs->add($f);
 
