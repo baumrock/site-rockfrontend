@@ -27,7 +27,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             'summary' => __('Tracy debugger from Nette with many PW specific custom tools.', __FILE__),
             'author' => 'Adrian Jones',
             'href' => 'https://processwire.com/talk/forum/58-tracy-debugger/',
-            'version' => '4.26.36',
+            'version' => '4.26.67',
             'autoload' => 100000, // in PW 3.0.114+ higher numbers are loaded first - we want Tracy first
             'singular' => true,
             'requires'  => 'ProcessWire>=2.7.2, PHP>=5.4.4',
@@ -216,6 +216,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             "forceScream" => null,
             "outputMode" => 'detect',
             "showLocation" => array('Tracy\Dumper::LOCATION_SOURCE', 'Tracy\Dumper::LOCATION_LINK', 'Tracy\Dumper::LOCATION_CLASS'),
+            "keysToHide" => 'dbPass, dbName, dbUser, user, username, pass, password, pwd, pw, auth, token, secret',
             "logSeverity" => array(),
             "excludedPwLogFiles" => array('session', 'modules', 'file-compiler'),
             "excludedTracyLogFiles" => array(),
@@ -284,8 +285,9 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             "userSwitcherRestricted" => null,
             "userSwitcherIncluded" => null,
             "todoIgnoreDirs" => 'git, svn, images, img, errors, sass-cache, node_modules',
-            "todoScanModules" => null,
             "todoScanAssets" => null,
+            "todoScanModules" => null,
+            "todoSpecifiedDirectories" => '',
             "todoAllowedExtensions" => 'php, module, inc, txt, latte, html, htm, md, css, scss, less, js',
             "variablesShowPwObjects" => null,
             "alwaysShowDebugTools" => 1,
@@ -309,6 +311,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             "forceEditorLinksToTracy" => 1,
             "localRootPath" => '',
             "aceTheme" => 'tomorrow_night_bright',
+            "consoleTabsTheme" => 'dark-theme',
             "codeFontSize" => 14,
             "codeLineHeight" => 24,
             "codeShowInvisibles" => true,
@@ -948,6 +951,10 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $locations = array_map('constant', $this->data['showLocation']);
         Debugger::$showLocation = array_reduce($locations, function($a, $b) { return $a | $b; }, 0);
 
+        if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+            Debugger::$keysToHide = array_map('trim', explode(',', $this->data['keysToHide']));
+        }
+
 
         // START ENABLING TRACY
         // now that required classes above have been loaded, we can now exit if user is not allowed
@@ -1021,6 +1028,52 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         if(method_exists('Tracy\Debugger', 'getFireLogger')) Debugger::$showFireLogger = $this->data['showFireLogger'];
         if(isset(Debugger::$reservedMemorySize)) Debugger::$reservedMemorySize = $this->data['reservedMemorySize'];
 
+        // EDITOR PROTOCOL HANDLER
+        // build up array of replacements to pass to Debugger::$editorMapping
+        // they have to be completely separate replacements because Tracy uses strtr()
+        // which won't replace the same substring more than once
+        $mappingReplacements = array();
+        $compilerCachePath = isset($this->wire('config')->fileCompilerOptions['cachePath']) && $this->wire('config')->fileCompilerOptions['cachePath'] != '' ? $this->wire('config')->fileCompilerOptions['cachePath'] : $this->wire('config')->paths->cache . 'FileCompiler/';
+        $compilerCachePath = str_replace('/', DIRECTORY_SEPARATOR, $compilerCachePath);
+
+        static::$useOnlineEditor = (static::$allowedSuperuser || self::$validLocalUser || self::$validSwitchedUser) &&
+            (static::$isLocal && in_array('local', $this->data['useOnlineEditor'])) ||
+            (!static::$isLocal && in_array('live', $this->data['useOnlineEditor']) ||
+            (isset(static::$showPanels) && in_array('fileEditor', static::$showPanels) && $this->data['forceEditorLinksToTracy'])
+        );
+
+        if(static::$useOnlineEditor) {
+            if($this->data['onlineEditor'] == 'processFileEdit' &&
+                $this->wire('modules')->isInstalled('ProcessFileEdit') &&
+                $this->wire('user')->hasPermission('file-edit'))
+            {
+                static::$onlineEditor = 'processFileEdit';
+                Debugger::$editor = $this->wire('config')->urls->admin . 'setup/file-editor/?f=%file&l=%line';
+                $processFileEditSettings = $this->wire('modules')->getModuleConfigData('ProcessFileEdit');
+                static::$onlineFileEditorDirPath = $processFileEditSettings['dirPath'];
+            }
+            else {
+                static::$onlineEditor = 'tracy';
+                Debugger::$editor = 'tracy://?f=%file&l=%line';
+                static::$onlineFileEditorDirPath = $this->wire('config')->paths->root;
+            }
+            $mappingReplacements[$compilerCachePath . str_replace($this->wire('config')->paths->root,'' , static::$onlineFileEditorDirPath)] = '';
+            $mappingReplacements[static::$onlineFileEditorDirPath] = '';
+        }
+        else {
+            Debugger::$editor = $this->data['editor'];
+
+            if($this->data['localRootPath'] != '') {
+                $mappingReplacements[$compilerCachePath] = $this->data['localRootPath'];
+                $mappingReplacements[$this->wire('config')->paths->root] = $this->data['localRootPath'];
+            }
+            else {
+                $mappingReplacements[$compilerCachePath] = $this->wire('config')->paths->root;
+            }
+        }
+
+        Debugger::$editorMapping = $mappingReplacements;
+
         if(static::$allowedTracyUser === 'development') {
 
             // TRACY TOGGLER
@@ -1040,53 +1093,6 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
 
 
             if(Debugger::$showBar) {
-
-                // EDITOR PROTOCOL HANDLER
-                // build up array of replacements to pass to Debugger::$editorMapping
-                // they have to be completely separate replacements because Tracy uses strtr()
-                // which won't replace the same substring more than once
-                $mappingReplacements = array();
-                $compilerCachePath = isset($this->wire('config')->fileCompilerOptions['cachePath']) && $this->wire('config')->fileCompilerOptions['cachePath'] != '' ? $this->wire('config')->fileCompilerOptions['cachePath'] : $this->wire('config')->paths->cache . 'FileCompiler/';
-                $compilerCachePath = str_replace('/', DIRECTORY_SEPARATOR, $compilerCachePath);
-
-                static::$useOnlineEditor = (static::$allowedSuperuser || self::$validLocalUser || self::$validSwitchedUser) &&
-                    (static::$isLocal && in_array('local', $this->data['useOnlineEditor'])) ||
-                    (!static::$isLocal && in_array('live', $this->data['useOnlineEditor']) ||
-                    (in_array('fileEditor', static::$showPanels) && $this->data['forceEditorLinksToTracy'])
-                );
-
-                if(static::$useOnlineEditor) {
-                    if($this->data['onlineEditor'] == 'processFileEdit' &&
-                        $this->wire('modules')->isInstalled('ProcessFileEdit') &&
-                        $this->wire('user')->hasPermission('file-edit'))
-                    {
-                        static::$onlineEditor = 'processFileEdit';
-                        Debugger::$editor = $this->wire('config')->urls->admin . 'setup/file-editor/?f=%file&l=%line';
-                        $processFileEditSettings = $this->wire('modules')->getModuleConfigData('ProcessFileEdit');
-                        static::$onlineFileEditorDirPath = $processFileEditSettings['dirPath'];
-                    }
-                    else {
-                        static::$onlineEditor = 'tracy';
-                        Debugger::$editor = 'tracy://?f=%file&l=%line';
-                        static::$onlineFileEditorDirPath = $this->wire('config')->paths->root;
-                    }
-                    $mappingReplacements[$compilerCachePath . str_replace($this->wire('config')->paths->root,'' , static::$onlineFileEditorDirPath)] = '';
-                    $mappingReplacements[static::$onlineFileEditorDirPath] = '';
-                }
-                else {
-                    Debugger::$editor = $this->data['editor'];
-
-                    if($this->data['localRootPath'] != '') {
-                        $mappingReplacements[$compilerCachePath] = $this->data['localRootPath'];
-                        $mappingReplacements[$this->wire('config')->paths->root] = $this->data['localRootPath'];
-                    }
-                    else {
-                        $mappingReplacements[$compilerCachePath] = $this->wire('config')->paths->root;
-                    }
-                }
-
-                Debugger::$editorMapping = $mappingReplacements;
-
 
                 //CUSTOM CSS & JS
                 Debugger::$customCssFiles = array(
@@ -1168,10 +1174,18 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
                                                     window.requestAnimationFrame(hideDebugBar);
                                                 } else {
                                                     document.getElementById("tracy-debug").style.display = "none";
-                                                    document.getElementById("tracy-show-button").style.display = "block";
                                                 }
                                             }
                                             hideDebugBar();
+
+                                            function showShowButton() {
+                                                if(!document.getElementById("tracy-show-button")) {
+                                                    window.requestAnimationFrame(showShowButton);
+                                                } else {
+                                                    document.getElementById("tracy-show-button").style.display = "block";
+                                                }
+                                            }
+                                            showShowButton();
                                         </script>
                                     ';
                                     $event->return = str_replace("</body>", "\n<!-- Tracy Hide Bar -->\n" . static::minify($hideBar)."\n</body>", $event->return);
@@ -1364,7 +1378,10 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
                 }
 
                 if(!$this->wire('input')->cookie->tracyHidden) {
-                    Debugger::$customJsStr .= 'document.body.classList.add("has-tracy-debugbar");';
+                    Debugger::$customJsStr .= '
+                    document.addEventListener("DOMContentLoaded", function() {
+                        document.body.classList.add("has-tracy-debugbar");
+                    });';
                 }
 
             }
@@ -1467,6 +1484,10 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
 
             // TRACY SETTING
             //convert checked log severity strings to constants and array_reduce to bitwise OR (|) line
+            // remove E_STRICT in case it's still set from old version of Tracy - it's deprecated in PHP 8.4
+            if(($key = array_search('E_STRICT', $this->data['logSeverity'])) !== false) {
+                unset($this->data['logSeverity'][$key]);
+            }
             $severityOptions = array_map('constant', $this->data['logSeverity']);
             Debugger::$logSeverity = array_reduce($severityOptions, function($a, $b) { return $a | $b; }, 0);
 
@@ -1801,6 +1822,12 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
                     $pass = new Password();
                     $challenge = $pass->randomBase64String(32);
                     $this->wire('session')->tracyUserSwitcherId = $challenge;
+
+                    $configData = $this->wire('modules')->getModuleConfigData("TracyDebugger");
+                    $this->data['originalUserSwitcher'][$this->wire('session')->tracyUserSwitcherId] = $this->wire('user')->name;
+                    $configData['originalUserSwitcher'] = $this->data['originalUserSwitcher'];
+                    $this->wire('modules')->saveModuleConfigData($this, $configData);
+
                 }
                 // save session ID and expiry time in module config settings
                 $configData = $this->wire('modules')->getModuleConfigData("TracyDebugger");
@@ -1831,6 +1858,18 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
                 $this->wire('modules')->saveModuleConfigData($this, $configData);
                 $this->wire('session')->redirect($this->httpReferer);
             }
+            // if session not expired, switch to original user
+            elseif($this->wire('input')->post->revertOriginalUserSwitcher && $this->wire('session')->CSRF->validate()) {
+                if(isset($this->data['userSwitchSession'][$this->wire('session')->tracyUserSwitcherId]) && $this->data['userSwitchSession'][$this->wire('session')->tracyUserSwitcherId] > time() && $this->wire('session')->tracyUserSwitcherId) {
+                    // if session variable exists, grab it and add to the new session after logging out
+                    // and forceLogin the original user
+                    $tracyUserSwitcherId = $this->wire('session')->tracyUserSwitcherId;
+                    if($this->wire('user')->isLoggedin()) $this->wire('session')->logout();
+                    $this->wire('session')->forceLogin($this->data['originalUserSwitcher'][$tracyUserSwitcherId]);
+                    $this->wire('session')->tracyUserSwitcherId = $tracyUserSwitcherId;
+                }
+                $this->wire('session')->redirect($this->httpReferer);
+            }
             // if session not expired, switch to requested user
             elseif($this->wire('input')->post->userSwitcher && $this->wire('session')->CSRF->validate()) {
                 if(isset($this->data['userSwitchSession'][$this->wire('session')->tracyUserSwitcherId]) && $this->data['userSwitchSession'][$this->wire('session')->tracyUserSwitcherId] > time() && $this->wire('session')->tracyUserSwitcherId) {
@@ -1838,7 +1877,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
                     // and forceLogin the new switched user
                     $tracyUserSwitcherId = $this->wire('session')->tracyUserSwitcherId;
                     if($this->wire('user')->isLoggedin()) $this->wire('session')->logout();
-                    $user = $this->wire('session')->forceLogin($this->wire('input')->post->userSwitcher);
+                    $this->wire('session')->forceLogin($this->wire('input')->post->userSwitcher);
                     $this->wire('session')->tracyUserSwitcherId = $tracyUserSwitcherId;
                 }
                 $this->wire('session')->redirect($this->httpReferer);
@@ -3433,6 +3472,16 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $f->attr('checked', $data['debugInfo'] == '1' ? 'checked' : '');
         $fieldset->add($f);
 
+        if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+            $f = $this->wire('modules')->get("InputfieldText");
+            $f->attr('name', 'keysToHide');
+            $f->label = __('Keys to hide', __FILE__);
+            $f->description = __('Keys to redact in dumps and bluescreens.', __FILE__);
+            $f->notes = __('Enter keys separated by commas.'."\nDefault: ".self::getDefaultData()['keysToHide'], __FILE__);
+            if($data['keysToHide']) $f->attr('value', $data['keysToHide']);
+            $fieldset->add($f);
+        }
+
         $f = $this->wire('modules')->get("InputfieldInteger");
         $f->attr('name', 'maxDepth');
         $f->label = __('Maximum nesting depth', __FILE__);
@@ -3546,7 +3595,6 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $f->addOption('E_USER_ERROR', 'E_USER_ERROR');
         $f->addOption('E_USER_WARNING', 'E_USER_WARNING');
         $f->addOption('E_USER_NOTICE', 'E_USER_NOTICE');
-        $f->addOption('E_STRICT', 'E_STRICT');
         $f->addOption('E_RECOVERABLE_ERROR', 'E_RECOVERABLE_ERROR');
         $f->addOption('E_DEPRECATED', 'E_DEPRECATED');
         $f->addOption('E_USER_DEPRECATED', 'E_USER_DEPRECATED');
@@ -3827,6 +3875,17 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $f->attr('value', $data['consoleBackupLimit']);
         $fieldset->add($f);
 
+        $f = $this->wire('modules')->get("InputfieldSelect");
+        $f->attr('name', 'consoleTabsTheme');
+        $f->label = __('Tabs Theme', __FILE__);
+        $f->columnWidth = 33;
+        $f->addOption('dark-theme', 'Dark');
+        $f->addOption('light-theme', 'Light');
+        $f->addOption('kiwi-theme', 'Kiwi');
+        $f->required = true;
+        if($data['consoleTabsTheme']) $f->attr('value', $data['consoleTabsTheme']);
+        $fieldset->add($f);
+
         $f = $this->wire('modules')->get("InputfieldTextarea");
         $f->attr('name', 'consoleCodePrefix');
         $f->label = __('Code prefix', __FILE__);
@@ -3977,9 +4036,9 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
 
         $f = $this->wire('modules')->get("InputfieldURL");
         $f->attr('name', 'customSnippetsUrl');
-        $f->label = __('Custom snippets URL', __FILE__);
-        $f->description = __('Link to snippets file for use in Console and File Editor panels. Can be local or remote, eg. a Github Gist file.', __FILE__);
-        $f->notes = __('If Github gist, you must use a service such as [https://rawgit.com/](https://rawgit.com/)', __FILE__);
+        $f->label = __('Custom autocompletion snippets URL', __FILE__);
+        $f->description = __("Link to snippets file for serving autocompletions in Console and File Editor panels. Can be local or remote, eg. a Github Gist file.\nTracy comes with two default autocompletions: `pwfind` and `pwforeach`. Type `pw` to see available options.", __FILE__);
+        $f->notes = __('If Github gist, you must use a service such as [https://cdn.statically.io/gist/](https://cdn.statically.io/gist) or [https://gist.githubusercontent.com/](https://gist.githubusercontent.com/)', __FILE__);
         if($data['customSnippetsUrl']) $f->attr('value', $data['customSnippetsUrl']);
         $fieldset->add($f);
 
@@ -4075,7 +4134,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             $f = $this->wire('modules')->get("InputfieldCheckbox");
             $f->attr('name', 'adminerJsonInTable');
             $f->label = __('JSON In Table', __FILE__);
-            $f->description = __('Whether apply JSON preview in selection table.', __FILE__);
+            $f->description = __('Whether to apply JSON preview in selection table.', __FILE__);
             $f->notes = __('Default: true', __FILE__);
             $f->columnWidth = 25;
             $f->attr('checked', $this->data['adminerJsonInTable'] == '1' ? 'checked' : '');
@@ -4084,7 +4143,7 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
             $f = $this->wire('modules')->get("InputfieldCheckbox");
             $f->attr('name', 'adminerJsonInEdit');
             $f->label = __('JSON In Edit', __FILE__);
-            $f->description = __('Whether apply JSON preview in edit form.', __FILE__);
+            $f->description = __('Whether to apply JSON preview in edit form.', __FILE__);
             $f->notes = __('Default: true', __FILE__);
             $f->columnWidth = 25;
             $f->attr('checked', $this->data['adminerJsonInEdit'] == '1' ? 'checked' : '');
@@ -4268,6 +4327,15 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldCheckbox");
+        $f->attr('name', 'todoScanAssets');
+        $f->label = __('Scan site assets', __FILE__);
+        $f->description = __('Check to allow the ToDo to scan the /site/assets directory. Otherwise it will only scan /site/templates.', __FILE__);
+        $f->notes = __('If you check this, you should add files, logs, cache, sessions and other relevant terms to the `Ignore Directories` field.', __FILE__);
+        $f->columnWidth = 50;
+        $f->attr('checked', $data['todoScanAssets'] == '1' ? 'checked' : '');
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldCheckbox");
         $f->attr('name', 'todoScanModules');
         $f->label = __('Scan site modules', __FILE__);
         $f->description = __('Check to allow the ToDo to scan the /site/modules directory. Otherwise it will only scan /site/templates.', __FILE__);
@@ -4276,13 +4344,12 @@ class TracyDebugger extends WireData implements Module, ConfigurableModule {
         $f->attr('checked', $data['todoScanModules'] == '1' ? 'checked' : '');
         $fieldset->add($f);
 
-        $f = $this->wire('modules')->get("InputfieldCheckbox");
-        $f->attr('name', 'todoScanAssets');
-        $f->label = __('Scan site assets', __FILE__);
-        $f->description = __('Check to allow the ToDo to scan the /site/assets directory. Otherwise it will only scan /site/templates.', __FILE__);
-        $f->notes = __('If you check this, you should add files, logs, cache, sessions and other relevant terms to the `Ignore Directories` field.', __FILE__);
-        $f->columnWidth = 50;
-        $f->attr('checked', $data['todoScanAssets'] == '1' ? 'checked' : '');
+        $f = $this->wire('modules')->get("InputfieldTextarea");
+        $f->attr('name', 'todoSpecifiedDirectories');
+        $f->label = __('Specified directories', __FILE__);
+        $f->description = __('Line break separated directories to be scanned for ToDo items.', __FILE__);
+        $f->notes = __('For example `site/classes` or `site/modules/MyModuleName`', __FILE__);
+        if($data['todoSpecifiedDirectories']) $f->attr('value', $data['todoSpecifiedDirectories']);
         $fieldset->add($f);
 
         // ProcessWire and Tracy Log Panels

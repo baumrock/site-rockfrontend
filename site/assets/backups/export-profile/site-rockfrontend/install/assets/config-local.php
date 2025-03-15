@@ -19,8 +19,8 @@ $config->httpHosts = ['{host}'];
 // between desktop and mobile in browsers dev tools
 $config->sessionFingerprint = false;
 
-// Activate RockFrontend livereload
-$config->livereload = 1;
+// Activate RockDevTools livereload
+$config->rockdevtools = 1;
 
 // RockMigrations
 // See https://www.baumrock.com/en/processwire/modules/rockmigrations/docs/filesondemand/

@@ -1,3 +1,17 @@
+## [1.11.0](https://github.com/baumrock/RockAdminTweaks/compare/v1.10.0...v1.11.0) (2025-03-12)
+
+
+### Features
+
+* add tweak to enable all languages ([f2a62c6](https://github.com/baumrock/RockAdminTweaks/commit/f2a62c61c4a76f9bb490a83aee43447bc512ccba))
+
+## [1.10.0](https://github.com/baumrock/RockAdminTweaks/compare/v1.9.3...v1.10.0) (2025-01-07)
+
+
+### Features
+
+* add tweak to add modal param to pagelist links ([46871fe](https://github.com/baumrock/RockAdminTweaks/commit/46871fe5880aba630d6c5f5a073ee68066f6d3ef))
+
 ## [1.9.3](https://github.com/baumrock/RockAdminTweaks/compare/v1.9.2...v1.9.3) (2024-07-22)
 
 
@@ -20,23 +34,4 @@
 ### Bug Fixes
 
 * [#17](https://github.com/baumrock/RockAdminTweaks/issues/17) ([74f5ad2](https://github.com/baumrock/RockAdminTweaks/commit/74f5ad2071e57134772d09bb5082810a10ae5a91))
-
-## [1.9.0](https://github.com/baumrock/RockAdminTweaks/compare/v1.8.1...v1.9.0) (2024-05-19)
-
-
-### Features
-
-* add cache buster for pathToUrl() method ([cc5ab2f](https://github.com/baumrock/RockAdminTweaks/commit/cc5ab2fc62634f485c002267d4c356265e040da2))
-
-
-### Bug Fixes
-
-* css style adding wrong margin to header icons ([63b4244](https://github.com/baumrock/RockAdminTweaks/commit/63b4244a2cb3183befd4fe507d91be9112957cbc))
-
-## [1.8.1](https://github.com/baumrock/RockAdminTweaks/compare/v1.8.0...v1.8.1) (2024-05-19)
-
-
-### Bug Fixes
-
-* remove select2 zip ([ae01959](https://github.com/baumrock/RockAdminTweaks/commit/ae01959f5a04add3314cdd2905a8f616abde9ca0))
 

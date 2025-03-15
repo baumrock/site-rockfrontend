@@ -69,6 +69,9 @@ class RequestInfoPanel extends BasePanel {
             )
         ) {
             $p = $this->wire('process')->getPage();
+            if($p instanceof NullPage) {
+                $p = $this->wire('pages')->get((int) $this->wire('input')->get('id'));
+            }
         }
         else {
             $p = $this->wire('page');
@@ -439,7 +442,7 @@ class RequestInfoPanel extends BasePanel {
             </tr>
             <tr>
                 <td>process</td>
-                <td>'.$this->wire('page')->process.'</td>
+                <td>'.(isset($this->wire('page')->process) ? $this->wire('page')->process : $this->wire('process')).'</td>
             </tr>
             <tr>
                 <td>class</td>
@@ -511,15 +514,19 @@ class RequestInfoPanel extends BasePanel {
                     <td>'.date("Y-m-d H:i:s", $p->modified).'</td>
                 </tr>
                 <tr>
-                    <td>Hidden (status)</td>
+                    <td>Hidden</td>
                     <td>'. ($p->isHidden() ? "✔" : "✘") .'</td>
                 </tr>
                 <tr>
-                    <td>Unpublished (status)</td>
+                    <td>Unpublished</td>
                     <td>'. ($p->isUnpublished() ? "✔" : "✘") .'</td>
                 </tr>
                 <tr>
-                    <td>Locked (status)</td>
+                    <td>Trashed</td>
+                    <td>'. ($p->isTrash() ? "✔" : "✘") .'</td>
+                </tr>
+                <tr>
+                    <td>Locked</td>
                     <td>'. ($p->is(Page::statusLocked) ? "✔" : "✘") .'</td>
                 </tr>
             </table>';
@@ -531,10 +538,16 @@ class RequestInfoPanel extends BasePanel {
             $redirectInfo = '
             <table>';
             foreach(\TracyDebugger::$redirectInfo as $k => $v) {
+
+                $filePathParts = explode(':', $v);
+
+                if($k == 'file') {
+                    $v = \TracyDebugger::createEditorLink($this->wire('config')->paths->root . ltrim($filePathParts[0], '/'), $filePathParts[1], $v, 'Edit ' . $filePathParts[0]);
+                }
                 $redirectInfo .= '
                     <tr>
                         <td>'.$k.'</td>
-                        <td>'.Dumper::toHtml($v).'</td>
+                        <td>'.$v.'</td>
                     </tr>
                 ';
             }
@@ -878,7 +891,15 @@ class RequestInfoPanel extends BasePanel {
 
         // Load all the panel sections
         $isAdditionalBar = \TracyDebugger::isAdditionalBar();
-        $out = '
+
+        $tracyModuleUrl = $this->wire('config')->urls->TracyDebugger;
+        $out = <<< HTML
+        <script>
+            tracyJSLoader.load("{$tracyModuleUrl}scripts/file-editor.js");
+        </script>
+HTML;
+
+        $out .= '
         <h1>' . $this->icon . ' Request Info' . ($isAdditionalBar ? ' ('.$isAdditionalBar.')' : '') . '</h1><span class="tracy-icons"><span class="resizeIcons"><a href="#" title="Maximize / Restore" onclick="tracyResizePanel(\'RequestInfoPanel'.($isAdditionalBar ? '-'.$isAdditionalBar : '').'\')">+</a></span></span>
         <div class="tracy-inner">
         ';

@@ -2,9 +2,13 @@
 
 The RockFrontend Toolbar is a powerful administrative interface that seamlessly integrates into your frontend. It provides quick access to essential page editing functions, navigation shortcuts, and administrative tools - making content management efficient and intuitive for website administrators.
 
+<img src=https://i.imgur.com/7cZbtXF.png class=blur>
+
 ## Adding the toolbar to your frontend
 
-Add the toolbar right after the opening `<body>` tag - either directly:
+You can add the toolbar to your frontend markup wherever you want. I like to place it right after the opening `<body>` tag - but if your design already has a sticky header, for example, you can place it into that header as well to make sure it is always visible!
+
+This is how you output the un-modified toolbar:
 
 ```html
 <html>
@@ -23,17 +27,20 @@ Add the toolbar right after the opening `<body>` tag - either directly:
 </html>
 ```
 
-Or after customising it in `_init.php` via the dom() method:
+But you can also customize the toolbar's markup easily via RockFrontend's dom-tools. This can be handy and you can make your toolbar 100% match the look & feel of your frontend.
+
+All you have to do is to grab the toolbar, modify it, then finally output it. The principle is as follows:
 
 ```php
-// _init.php
+// for example in _init.php
 // Customize RockFrontend Toolbar
 $toolbar = '';
 if ($user->isLoggedin()) {
   // ...
 }
 
-// _main.php
+// at the desired position of your markup (eg _main.latte/php or whatever)
+// note that the output must happen AFTER you modify the toolbar via dom()
 echo $toolbar;
 ```
 
