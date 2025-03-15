@@ -1,3 +1,12 @@
+## [1.6.0](https://github.com/baumrock/site-rockfrontend/compare/v1.5.0...v1.6.0) (2025-03-15)
+
+
+### Features
+
+* add new rockfrontend toolbar ([ca89524](https://github.com/baumrock/site-rockfrontend/commit/ca895241ff351bc5871bf2b21ff8b2df227a7d67))
+* add RockPageBuilder quickstart ([42383b3](https://github.com/baumrock/site-rockfrontend/commit/42383b38cf3f5eaa7bdf6a06954b23256dc35cf1))
+* update site profile ([f98849a](https://github.com/baumrock/site-rockfrontend/commit/f98849a4a3d0dfae3aeaa770b66d27b43e399d15))
+
 ## [1.5.0](https://github.com/baumrock/site-rockfrontend/compare/v1.4.0...v1.5.0) (2025-01-26)
 
 
@@ -33,11 +42,4 @@
 ### Bug Fixes
 
 * wrong path for autoload docs ([9e818cf](https://github.com/baumrock/site-rockfrontend/commit/9e818cf51991154de160110181591dafa05f3f18))
-
-## [1.3.0](https://github.com/baumrock/site-rockfrontend/compare/v1.2.0...v1.3.0) (2024-09-27)
-
-
-### Features
-
-* add custom layout example ([747e956](https://github.com/baumrock/site-rockfrontend/commit/747e95602546d8dcadb33ba58354b7b967002f66))
 
