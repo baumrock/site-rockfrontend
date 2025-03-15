@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  {* NOTE: styles.min.css & scripts.min.js are generated in _init.php via RockDevTools *}
   {rockfrontend()->styleTag('/site/templates/dst/styles.min.css')|noescape}
   {rockfrontend()->scriptTag('/site/templates/dst/scripts.min.js', 'defer')|noescape}
 </head>
 <body>
+  {rockfrontend()->toolbar()|noescape}
   {include "sections/header.latte"}
   {include "sections/main.latte"}
   {include "sections/footer.latte"}
