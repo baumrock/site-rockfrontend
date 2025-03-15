@@ -1,0 +1,11 @@
+<hr>
+<div class="uk-container uk-section-small">
+  <h3>RockPageBuilder Quickstart</h3>
+  <div class='uk-margin-top'>
+    {if wire()->modules->isInstalled('RockPageBuilder')}
+      {rockpagebuilder()->render(true)}
+    {else}
+      NOT INSTALLED
+    {/if}
+  </div>
+</div>
