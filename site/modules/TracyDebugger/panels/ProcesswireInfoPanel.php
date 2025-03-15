@@ -86,7 +86,7 @@ class ProcesswireInfoPanel extends BasePanel {
 
         $out = '';
         $panelSections = \TracyDebugger::getDataValue('processwireInfoPanelSections');
-        $rootUrl = $this->wire('config')->urls->root;
+        $currentUrl = $_SERVER['REQUEST_URI'];
 
         if(in_array('gotoId', $panelSections)) {
             $out .= <<< HTML
@@ -112,7 +112,7 @@ class ProcesswireInfoPanel extends BasePanel {
                                 if(xmlhttp.readyState == XMLHttpRequest.DONE) {
                                     if(xmlhttp.status == 200 && xmlhttp.responseText !== "[]") {
                                         var pageDetails = JSON.parse(xmlhttp.responseText);
-                                        document.getElementById("pageDetails").innerHTML = "<span style='font-weight:bold'>" + pageDetails.title + "</span>&nbsp;&nbsp;<a href='{$this->wire('config')->urls->admin}setup/template/edit?id="  + pageDetails.template_id + "' style='color:#888'>" + pageDetails.template_name + "</a>";
+                                        document.getElementById("pageDetails").innerHTML = "<span uk-tooltip title='" + pageDetails.path + "' style='" + (pageDetails.unpublished ? 'text-decoration: line-through' : '') + (pageDetails.hidden ? '; opacity: 0.5' : '') + "'>" + (pageDetails.trash ? '🗑︎ ' : '') + pageDetails.title + "</span>&nbsp;(<a href='{$this->wire('config')->urls->admin}setup/template/edit?id="  + pageDetails.template_id + "' style='color:#888' title='" + (pageDetails.template_label ? pageDetails.template_label : '') + "' uk-tooltip>" + pageDetails.template_name + "</a>)";
                                         document.getElementById("idGoToEdit").href = "{$this->wire('config')->urls->admin}page/edit/?id=" + pageDetails.id;
                                         document.getElementById("idGoToView").href = pageDetails.url;
                                         document.getElementById("idGoToOpen").href = "{$this->wire('config')->urls->admin}page/?open=" + pageDetails.id;
@@ -124,7 +124,7 @@ class ProcesswireInfoPanel extends BasePanel {
                                 }
                             }
 
-                            xmlhttp.open("POST", "$rootUrl", true);
+                            xmlhttp.open("POST", "$currentUrl", true);
                             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                             xmlhttp.setRequestHeader("X-Requested-With", "XMLHttpRequest");
                             xmlhttp.send("goToPage="+pid);

@@ -504,6 +504,10 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 				'label' => $this->_('Number of children'),
 				'sanitizer' => 'integer',
 			),
+			'children.' => array(
+				'input' => 'subfields',
+				'label' => $this->_x('Children',' children-with-subfield'),
+			),
 			'parent' => array(
 				'input' => 'number', // select
 				'label' => $this->_x('Parent', 'parent-only'),
@@ -933,6 +937,10 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 		foreach($settings['customFields'] as $field) {
 			/** @var Field $field */
 			if($settings['showFieldLabels']) {
+				if($this->initTemplate) {
+					$f = $this->initTemplate->fieldgroup->getField($field, true);
+					if($f) $field = $f;
+				}
 				$label = $field->getLabel();
 				while(isset($customFields[$label])) $label .= ' ';
 			} else {
@@ -1180,11 +1188,11 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 	 * @param string $selectedOperator
 	 * @param string $selectedValue
 	 * @param bool $orChecked
-	 * @param Selector $selector
+	 * @param Selector|null $selector
 	 * @return string
 	 * 
 	 */
-	protected function renderOpval($fieldName, $type = '', $selectedOperator = '', $selectedValue = '', $orChecked = false, Selector $selector = null) { 
+	protected function renderOpval($fieldName, $type = '', $selectedOperator = '', $selectedValue = '', $orChecked = false, ?Selector $selector = null) { 
 
 		/*
 		$this->message("fieldName: $fieldName"); 
@@ -1495,11 +1503,11 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 	 * 
 	 * @param $fieldName
 	 * @param string $selectedValue
-	 * @param Selector $selector
+	 * @param Selector|null $selector
 	 * @return string 
 	 * 
 	 */
-	protected function renderSelectSubfield($fieldName, $selectedValue = '', Selector $selector = null) {
+	protected function renderSelectSubfield($fieldName, $selectedValue = '', ?Selector $selector = null) {
 		
 		$sanitizer = $this->wire()->sanitizer;
 		
@@ -1510,8 +1518,25 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 
 		if($fieldName == 'parent' || $fieldName == 'children') {
 			// for parent or children, use the existing functionality in renderSelectField
-			
-			$fields = $this->wire('fields'); 
+	
+			if($fieldName === 'children') {
+				/** @var Templates $templates */
+				$fields = array();
+				$initTemplates = $this->getTemplatesFromInitValue($this->initValue);
+				foreach($initTemplates as $template) {
+					if(!$template instanceof Template) {
+						$template = $this->wire()->templates->get($template);
+					}
+					if(!$template) continue;
+					foreach($template->childTemplates() as $t) {
+						foreach($t->fieldgroup as $field) {
+							$fields[$field->name] = $field;
+						}
+					}
+				}
+			} else {
+				$fields = $this->wire()->fields;
+			}
 			$out = $this->renderSelectField(array(
 				'name' => 'subfield', 
 				'class' => 'select-subfield', 
@@ -1521,7 +1546,7 @@ class InputfieldSelector extends Inputfield implements ConfigurableModule {
 				'customFields' => $fields,
 				'exclude' => array(), // prevent exclusion of 'count'
 				'prepend' => 
-					"<option value='parent' class='select-subfield-default' data-name='$valueName' data-label='$valueLabel'>" . 
+					"<option value='$fieldName' class='select-subfield-default' data-name='$valueName' data-label='$valueLabel'>" . 
 					$valueLabel . 
 					"</option>",
 			), $selectedValue); 

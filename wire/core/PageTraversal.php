@@ -624,7 +624,7 @@ class PageTraversal {
 			'host' => '', 
 			'pageNum' => is_int($options) || (is_string($options) && in_array($options, array('+', '-'))) ? $options : 1,
 			'data' => array(),
-			'urlSegmentStr' => is_string($options) ? $options : '',
+			'urlSegmentStr' => (is_string($options) && !in_array($options, array('+', '-'))) ? $options : '',
 			'urlSegments' => array(),
 			'language' => is_object($options) && wireInstanceOf($options, 'Language') ? $options : null,
 		);
@@ -707,7 +707,7 @@ class PageTraversal {
 				}
 				if(!strlen($prefix)) $prefix = $config->pageNumUrlPrefix;
 				$url = rtrim($url, '/') . '/' . $prefix . ((int) $options['pageNum']);
-				if($template->slashPageNum) $url .= '/';
+				if(((int) $template->slashPageNum) === 1) $url .= '/';
 			}
 		}
 
@@ -1147,11 +1147,11 @@ class PageTraversal {
 	 *
 	 * @param Page $page
 	 * @param string|array $selector Optional selector. When specified, will find nearest next sibling that matches.
-	 * @param PageArray $siblings Optional siblings to use instead of the default. May also be specified as first argument when no selector needed.
+	 * @param PageArray|null $siblings Optional siblings to use instead of the default. May also be specified as first argument when no selector needed.
 	 * @return Page|NullPage Returns the next sibling page, or a NullPage if none found.
 	 *
 	 */
-	public function nextSibling(Page $page, $selector = '', PageArray $siblings = null) {
+	public function nextSibling(Page $page, $selector = '', ?PageArray $siblings = null) {
 		if($selector instanceof PageArray) {
 			// backwards compatible to when $siblings was first argument
 			$siblings = $selector;
@@ -1191,11 +1191,11 @@ class PageTraversal {
 	 *
 	 * @param Page $page
 	 * @param string|array $selector Optional selector. When specified, will find nearest previous sibling that matches. 
-	 * @param PageArray $siblings Optional siblings to use instead of the default. May also be specified as first argument when no selector needed.
+	 * @param PageArray|null $siblings Optional siblings to use instead of the default. May also be specified as first argument when no selector needed.
 	 * @return Page|NullPage Returns the previous sibling page, or a NullPage if none found. 
 	 *
 	 */
-	public function prevSibling(Page $page, $selector = '', PageArray $siblings = null) {
+	public function prevSibling(Page $page, $selector = '', ?PageArray $siblings = null) {
 		if($selector instanceof PageArray) {
 			// backwards compatible to when $siblings was first argument
 			$siblings = $selector;
@@ -1222,11 +1222,11 @@ class PageTraversal {
 	 *
 	 * @param Page $page
 	 * @param string|array $selector Optional selector. When specified, will filter the found siblings.
-	 * @param PageArray $siblings Optional siblings to use instead of the default. 
+	 * @param PageArray|null $siblings Optional siblings to use instead of the default. 
 	 * @return PageArray Returns all matching pages after this one.
 	 *
 	 */
-	public function nextAllSiblings(Page $page, $selector = '', PageArray $siblings = null) {
+	public function nextAllSiblings(Page $page, $selector = '', ?PageArray $siblings = null) {
 
 		if(is_null($siblings)) {
 			$siblings = $page->parent()->children();
@@ -1256,11 +1256,11 @@ class PageTraversal {
 	 *
 	 * @param Page $page
 	 * @param string|array $selector Optional selector. When specified, will filter the found siblings.
-	 * @param PageArray $siblings Optional siblings to use instead of the default. 
+	 * @param PageArray|null $siblings Optional siblings to use instead of the default. 
 	 * @return PageArray
 	 *
 	 */
-	public function prevAllSiblings(Page $page, $selector = '', PageArray $siblings = null) {
+	public function prevAllSiblings(Page $page, $selector = '', ?PageArray $siblings = null) {
 
 		if(is_null($siblings)) {
 			$siblings = $page->parent()->children();
@@ -1291,7 +1291,7 @@ class PageTraversal {
 	 * @return PageArray
 	 *
 	 */
-	public function nextUntilSiblings(Page $page, $selector = '', $filter = '', PageArray $siblings = null) {
+	public function nextUntilSiblings(Page $page, $selector = '', $filter = '', ?PageArray $siblings = null) {
 
 		if(is_null($siblings)) {
 			$siblings = $page->parent()->children();
@@ -1343,7 +1343,7 @@ class PageTraversal {
 	 * @return PageArray
 	 *
 	 */
-	public function prevUntilSiblings(Page $page, $selector = '', $filter = '', PageArray $siblings = null) {
+	public function prevUntilSiblings(Page $page, $selector = '', $filter = '', ?PageArray $siblings = null) {
 
 		if(is_null($siblings)) {
 			$siblings = $page->parent()->children();

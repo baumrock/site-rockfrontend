@@ -1183,9 +1183,11 @@ class ProcessField extends Process implements ConfigurableModule {
 			$field = $modules->get('InputfieldHidden');
 			$field->attr('id+name', 'asmListItemStatus'); 
 			$field->attr('class', 'asmListItemStatus');
+			$width = $this->field->columnWidth;
 			$field->attr('data-tpl',
 				// % gets replaced with live percent
-				"<span class='ui-priority-secondary'>" . $this->field->type->shortName . "</span> %"
+				"<span>" .  $this->field->type->shortName . "</span> " . 
+				"<span class='columnWidth ui-priority-secondary' data-was='$width' data-field='{$this->field->id}'>%</span>"
 			); 
 			$field->attr('value', '');
 			$form->append($field); 
@@ -1690,7 +1692,7 @@ class ProcessField extends Process implements ConfigurableModule {
 	protected function buildEditFormTypeSelect() {
 		
 		$modules = $this->wire()->modules;
-		$languages = $this->wire()->langauges;
+		$languages = $this->wire()->languages;
 		$fields = $this->wire()->fields;
 		$config = $this->wire()->config;
 		$isNew = !$this->field || !$this->field->id;
@@ -2151,19 +2153,12 @@ class ProcessField extends Process implements ConfigurableModule {
 		$form->attr('id', 'advanced');
 		$form->attr('class', 'WireTab');
 		$form->attr('title', $this->_x('Advanced', 'tab'));
-	
-		$tags = array();
-		$textTools = $this->wire()->sanitizer->getTextTools();
-		foreach($this->wire()->fields->getTags() as $tagKey => $tagValue) {
-			$tagKey = $textTools->strtolower($tagKey);
-			$tags[$tagKey] = $tagValue;
-		}
-		ksort($tags);
+
 		/** @var InputfieldTextTags $field */
 		$field = $this->wire()->modules->getInstall('InputfieldTextTags');
 		$field->attr('name', 'tags');
 		$field->allowUserTags = true;
-		if(count($tags)) $field->setTagsList($tags);
+		$field->setTagsList($this->wire()->fields->getTags());
 		$field->attr('value', $this->field->getTags(true));
 		$field->icon = 'tags';
 		$field->label = $this->labels['tags'];
@@ -2572,7 +2567,7 @@ class ProcessField extends Process implements ConfigurableModule {
 			}
 			
 			if($name === 'tags') {
-				$value = $sanitizer->getTextTools()->strtolower($sanitizer->words($value));
+				$value = $sanitizer->words($value);
 			}
 
 			$this->field->set($name, $value); 
@@ -3268,7 +3263,7 @@ class ProcessField extends Process implements ConfigurableModule {
 	 */
 	public function search($text, array $options = array()) {
 
-		$languages = $this->wire()->langauges;
+		$languages = $this->wire()->languages;
 		$page = $this->getProcessPage();
 
 		$result = array(

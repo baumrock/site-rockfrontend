@@ -37,7 +37,7 @@ class TD extends TracyDebugger {
      * Tracy\Debugger::debugAll() shortcut.
      * @tracySkipLocation
      */
-    public static function debugAll($var, $title = NULL, array $options = NULL) {
+    public static function debugAll($var, $title = NULL, $options = []) {
         if(self::tracyUnavailable()) return false;
         static::barDump($var, $title, $options);
         static::dump($var, $title, $options);
@@ -60,7 +60,7 @@ class TD extends TracyDebugger {
      * Tracy\Debugger::barDump() shortcut.
      * @tracySkipLocation
      */
-    public static function barDump($var, $title = NULL, array $options = NULL) {
+    public static function barDump($var, $title = NULL, $options = []) {
         if(self::tracyUnavailable() && !\TracyDebugger::getDataValue('recordGuestDumps')) return false;
         if(is_array($title)) {
             $options = $title;
@@ -76,6 +76,9 @@ class TD extends TracyDebugger {
         $options[Dumper::TRUNCATE] = isset($options['maxLength']) ? $options['maxLength'] : \TracyDebugger::getDataValue('maxLength');
         if(defined('\Tracy\Dumper::ITEMS')) $options[Dumper::ITEMS] = isset($options['maxItems']) ? $options['maxItems'] : \TracyDebugger::getDataValue('maxItems');
         $options[Dumper::LOCATION] = Debugger::$showLocation;
+        if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+            $options[Dumper::KEYS_TO_HIDE] = Debugger::$keysToHide;
+        }
         if(version_compare(Debugger::VERSION, '2.6.0', '>=')) $options[Dumper::LAZY] = true;
         static::dumpToBar($var, $title, $options);
     }
@@ -85,7 +88,7 @@ class TD extends TracyDebugger {
      * Tracy\Debugger::barDumpBig() shortcut dumping with maxDepth = 6, maxLength = 9999, and maxItems = 250.
      * @tracySkipLocation
      */
-    public static function barDumpBig($var, $title = NULL, array $options = NULL) {
+    public static function barDumpBig($var, $title = NULL, $options = []) {
         if(self::tracyUnavailable() && !\TracyDebugger::getDataValue('recordGuestDumps')) return false;
         if(is_array($title)) {
             $options = $title;
@@ -100,6 +103,9 @@ class TD extends TracyDebugger {
         $options[Dumper::TRUNCATE] = 9999;
         if(defined('\Tracy\Dumper::ITEMS')) $options[Dumper::ITEMS] = 250;
         $options[Dumper::LOCATION] = Debugger::$showLocation;
+        if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+            $options[Dumper::KEYS_TO_HIDE] = Debugger::$keysToHide;
+        }
         if(version_compare(Debugger::VERSION, '2.6.0', '>=')) $options[Dumper::LAZY] = true;
         static::dumpToBar($var, $title, $options);
     }
@@ -108,7 +114,7 @@ class TD extends TracyDebugger {
      * Tracy\Debugger::dump() shortcut.
      * @tracySkipLocation
      */
-    public static function dump($var, $title = NULL, array $options = NULL) {
+    public static function dump($var, $title = NULL, $options = []) {
         if(self::tracyUnavailable() && PHP_SAPI !== 'cli') return false;
         if(is_array($title)) {
             $options = $title;
@@ -138,6 +144,9 @@ class TD extends TracyDebugger {
                 $options[Dumper::ITEMS] = isset($options['maxItems']) ? $options['maxItems'] : \TracyDebugger::getDataValue('maxItems');
             }
             $options[Dumper::LOCATION] = \TracyDebugger::$fromConsole ? false : Debugger::$showLocation;
+            if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+                $options[Dumper::KEYS_TO_HIDE] = Debugger::$keysToHide;
+            }
             if(version_compare(Debugger::VERSION, '2.6.0', '>=')) $options[Dumper::LAZY] = false;
             echo '
             <div class="tracy-inner" style="height:auto !important">
@@ -153,7 +162,7 @@ class TD extends TracyDebugger {
      * Tracy\Debugger::dumpBig() shortcut dumping with maxDepth = 6, maxLength = 9999 and maxItems = 250.
      * @tracySkipLocation
      */
-    public static function dumpBig($var, $title = NULL, array $options = NULL) {
+    public static function dumpBig($var, $title = NULL, $options = []) {
         if(self::tracyUnavailable() && PHP_SAPI !== 'cli') return false;
         if(is_array($title)) {
             $options = $title;
@@ -181,6 +190,9 @@ class TD extends TracyDebugger {
             $options[Dumper::TRUNCATE] = 9999;
             if(defined('\Tracy\Dumper::ITEMS')) $options[Dumper::ITEMS] = 250;
             $options[Dumper::LOCATION] = \TracyDebugger::$fromConsole ? false : Debugger::$showLocation;
+            if(version_compare(PHP_VERSION, '7.2.0', '>=')) {
+                $options[Dumper::KEYS_TO_HIDE] = Debugger::$keysToHide;
+            }
             if(version_compare(Debugger::VERSION, '2.6.0', '>=')) $options[Dumper::LAZY] = false;
             echo '
             <div class="tracy-inner" style="height:auto !important">
@@ -196,7 +208,7 @@ class TD extends TracyDebugger {
      * Send content to dump bar
      * @tracySkipLocation
      */
-    private static function dumpToBar($var, $title = NULL, array $options = NULL, $echo = false) {
+    private static function dumpToBar($var, $title = NULL, $options = [], $echo = false) {
         $dumpItem = array();
         $dumpItem['title'] = $title;
         $dumpItem['dump'] = $echo ? '<div class="tracy-echo">' . $var . '</div>' : static::generateDump($var, $options);
@@ -205,6 +217,7 @@ class TD extends TracyDebugger {
         if((self::tracyUnavailable() && \TracyDebugger::getDataValue('recordGuestDumps')) || (isset(\TracyDebugger::$showPanels) && in_array('dumpsRecorder', \TracyDebugger::$showPanels))) {
             $dumpsFile = wire('config')->paths->cache . 'TracyDebugger/dumps.json';
             $dumpsRecorderItems = file_exists($dumpsFile) ? json_decode(file_get_contents($dumpsFile), true) : array();
+            if(!$dumpsRecorderItems) $dumpsRecorderItems = array();
             array_push($dumpsRecorderItems, $dumpItem);
             wire('files')->filePutContents($dumpsFile, json_encode($dumpsRecorderItems));
         }

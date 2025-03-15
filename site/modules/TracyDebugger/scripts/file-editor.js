@@ -1,4 +1,5 @@
 if(!tracyFileEditorLoader) {
+
     var tracyFileEditorLoader = {
 
         getFileLineVars: function (query,variable) {
@@ -124,7 +125,7 @@ if(!tracyFileEditorLoader) {
                         xmlhttp.getAllResponseHeaders();
                     }
                 };
-                xmlhttp.open("POST", tracyFileEditor.rootUrl, true);
+                xmlhttp.open("POST", tracyFileEditor.currentUrl, true);
                 xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xmlhttp.setRequestHeader("X-Requested-With", "XMLHttpRequest");
                 xmlhttp.send("filePath=" + filePath);
@@ -133,6 +134,7 @@ if(!tracyFileEditorLoader) {
         },
 
         loadFileEditor: function(filePath, line) {
+
             if(document.getElementById("tracy-debug-panel-FileEditorPanel").classList.contains("tracy-mode-window")) {
                 this.populateFileEditor(filePath, line);
             }
@@ -155,22 +157,26 @@ if(!tracyFileEditorLoader) {
     };
     tracyFileEditorLoader.initializeEditor();
 
-    // click event added to body because of links on bluescreen
-    document.body.addEventListener("click", function(e) {
-        if(e.target) {
-            var curEl = e.target;
-            while(curEl && curEl.tagName != "A") {
-                curEl = curEl.parentNode;
-            }
-            if(curEl && curEl.href && curEl.href.indexOf("tracy://") !== -1) {
-                e.preventDefault();
-                var queryStr = curEl.href.split('?')[1];
-                var fullFilePath = tracyFileEditorLoader.getFileLineVars(queryStr, "f");
-                tracyFileEditorLoader.loadFileEditor(fullFilePath, tracyFileEditorLoader.getFileLineVars(queryStr, "l"));
+    document.addEventListener('DOMContentLoaded', function() {
 
-                tracyFileEditorLoader.addRecentlyOpenedFile(fullFilePath);
+        // click event added to body because of links on bluescreen
+        const htmlElement = document.documentElement;
+        var doc = htmlElement.classList.contains('tracy-bs-visible') ? document.body : document;
+        doc.addEventListener("click", function(e) {
 
+            if(e.target) {
+                var curEl = e.target;
+                while(curEl && curEl.tagName != "A") {
+                    curEl = curEl.parentNode;
+                }
+                if(curEl && curEl.href && curEl.href.indexOf("tracy://") !== -1) {
+                    e.preventDefault();
+                    var queryStr = curEl.href.split('?')[1];
+                    var fullFilePath = tracyFileEditorLoader.getFileLineVars(queryStr, "f");
+                    tracyFileEditorLoader.loadFileEditor(fullFilePath, tracyFileEditorLoader.getFileLineVars(queryStr, "l"));
+                    tracyFileEditorLoader.addRecentlyOpenedFile(fullFilePath);
+                }
             }
-        }
+        });
     });
 }

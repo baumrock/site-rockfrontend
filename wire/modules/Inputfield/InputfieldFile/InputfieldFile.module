@@ -30,7 +30,7 @@
  * @method string renderList($value)
  * @method string renderUpload($value)
  * @method void fileAdded(Pagefile $pagefile)
- * @method array extractMetadata(Pagefile $pagefile, array $metadata = array())
+ * @method array extractMetadata(Pagefile $pagefile, array $metadata = []) Given a Pagefile return array of meta data pulled from it
  * @method Pagefile|null processInputAddFile($filename)
  * @method void processInputDeleteFile(Pagefile $pagefile)
  * @method bool processInputFile(WireInputData $input, Pagefile $pagefile, $n)
@@ -640,7 +640,12 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 
 		$class = 'InputfieldFileList ui-helper-clearfix';
 		if($this->overwrite && !$this->renderValueMode) $class .= " InputfieldFileOverwrite";
-		if($out) $out = "<ul class='$class'>$out</ul>";
+		
+		if($out) {
+			$out = "<ul class='$class'>$out</ul>";
+		} else {
+			$out = "<div class='InputfieldFileListPlaceholder' hidden></div>";
+		}
 		
 		return $out; 
 	}
@@ -668,7 +673,11 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 			$fieldName = (string) $this->hasField;
 		}
 
-		$postUrl = $page ? $page->editUrl() : '';
+		if($page instanceof User && wireInstanceOf($this->wire->process, 'ProcessProfile')) {
+			$postUrl = './';
+		} else {
+			$postUrl = $page ? $page->editUrl() : '';
+		}
 
 		if($nameAttr != $fieldName && $fieldName && $postUrl) {
 			// file context for output after upload in case upload starts from a 
@@ -758,7 +767,7 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 	 * @return bool
 	 * 
 	 */
-	public function renderReady(Inputfield $parent = null, $renderValueMode = false) {
+	public function renderReady(?Inputfield $parent = null, $renderValueMode = false) {
 		
 		$config = $this->wire()->config;
 		
@@ -920,7 +929,7 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 	 * @return array Associative array of meta data (i.e. description and tags)
 	 * 
 	 */
-	protected function ___extractMetadata(Pagefile $pagefile, array $metadata = array()) {
+	protected function ___extractMetadata(Pagefile $pagefile, array $metadata = []) {
 	
 		$languages = $this->wire()->languages;
 		
@@ -1463,7 +1472,7 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 	 * @since 3.0.142
 	 * 
 	 */
-	public function getItemInputfields(Pagefile $item = null) {
+	public function getItemInputfields(?Pagefile $item = null) {
 	
 		/** @var Pagefiles $pagefiles */
 		$value = $this->val();
@@ -1498,7 +1507,11 @@ class InputfieldFile extends Inputfield implements InputfieldItemList, Inputfiel
 		if($item) {
 			$hasPage = $this->hasPage;
 			if($hasPage && wireInstanceOf($hasPage, 'RepeaterPage')) {
-				if(strpos($this->name, '_repeater') === false) {
+				$process = $this->wire()->process;
+				if($process instanceof WirePageEditor && $process->getPage()->id === $hasPage->id) {
+					// repeater page being edited directly or in front-end modal
+					// so no '_repeater' suffix is necessary here
+				} else if(strpos($this->name, '_repeater') === false) {
 					// ensures that custom fields are properly namespaced within repeater
 					// though note that this prevents it from working when editing a repeater
 					// page directly, independently of its forPage

@@ -300,13 +300,12 @@ class Languages extends PagesType {
 	 * $languages->unsetDefault();
 	 * ~~~~~
 	 * 
-	 * @param Language $language
+	 * @param Language|null $language
 	 * @return void
-	 * 
 	 * @see Languages::unsetDefault(), Languages::setLanguage()
 	 * 
 	 */
-	public function setDefault(Language $language = null) {
+	public function setDefault(?Language $language = null) {
 		if(is_null($language)) {
 			// save current user language setting and make current language default
 			if(!$this->defaultLanguage) return;
@@ -432,7 +431,7 @@ class Languages extends PagesType {
 	 * $languages->setLocale(LC_ALL, 'en_US.UTF-8'); 
 	 * 
 	 * // Set locale for specific category (CTYPE)
-	 * $langauges->setLocale(LC_CTYPE, 'en_US.UTF-8'); 
+	 * $languages->setLocale(LC_CTYPE, 'en_US.UTF-8'); 
 	 * 
 	 * // Try multiple locales till one works (in order) using array
 	 * $languages->setLocale(LC_ALL, [ 'en_US.UTF-8', 'en_US', 'en' ]);

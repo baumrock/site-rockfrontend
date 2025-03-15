@@ -96,6 +96,9 @@ $(document).ready(function() {
 
 			// URL where page move's should be posted
 			ajaxMoveURL: ProcessWire.config.urls.admin + 'page/sort/',
+			
+			// context to pass to the ajaxURL
+			ajaxParams: {},
 		
 			// classes for pagination
 			paginationClass: 'PageListPagination',
@@ -225,6 +228,7 @@ $(document).ready(function() {
 				
 				function hideItem($item) {
 					var $actions = $item.find('.PageListActions');
+					if($item.hasClass('PageListItemOpen') && $actions.hasClass('PageListActionsKeepOpen')) return;
 					$item.removeClass('PageListItemHover');
 					if($actions.is(":visible")) { // || $hoveredItem.hasClass('PageListItemOpen')) {
 						$actions.animate({opacity: 0}, options.hoverActionFade, function () {
@@ -561,6 +565,9 @@ $(document).ready(function() {
 					} else {
 						$loading.fadeOut('fast');
 					}
+					
+					data.list = $target;
+					data.item = $target.prev('.PageListItem');
 
 					if(replace) {
 						$children.show();
@@ -611,7 +618,14 @@ $(document).ready(function() {
 					"&lang=" + options.langID + 
 					"&open=" + options.openPageIDs[0] + 
 					"&mode=" + options.mode;
+				
 				if(options.labelName.length) ajaxURL += '&labelName=' + options.labelName;
+				
+				// Add params to the AJAX URL
+				for(var key in options.ajaxParams) {
+					ajaxURL += '&' + key + '=' + options.ajaxParams[key];
+				}
+				
 				$.getJSON(ajaxURL)
 					.done(function(data, textStatus, jqXHR) {
 						processChildren(data);

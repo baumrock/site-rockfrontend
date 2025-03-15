@@ -334,7 +334,7 @@ class InputfieldToggle extends Inputfield {
 	 * @return bool
 	 * 
 	 */
-	public function renderReady(Inputfield $parent = null, $renderValueMode = false) {
+	public function renderReady(?Inputfield $parent = null, $renderValueMode = false) {
 		$f = $this->getInputfield();
 		if($f && $f !== $this) $f->renderReady($parent, $renderValueMode);
 		if($this->useDeselect && $this->defaultOption === 'none') {
@@ -491,8 +491,7 @@ class InputfieldToggle extends Inputfield {
 		
 		if($labelType === null) $labelType = $this->labelType;
 
-		/** @var Languages $langauges */
-		$languages = $this->wire('languages');
+		$languages = $this->wire()->languages;
 		$setLanguage = false;
 		$languageId = '';
 		$yes = '';

@@ -403,6 +403,25 @@ class PagesRequest extends Wire {
 	
 		return $page;
 	}
+
+	/**
+	 * Get array of page info (as provided by PagePathFinder)
+	 * 
+	 * See the PagesPathFinder::get() method return value for a description of 
+	 * what this method returns.
+	 * 
+	 * If this method returns a blank array, it means that the getPage()
+	 * method has not yet been called or that it did not match a page. 
+	 * 
+	 * #pw-advanced
+	 * 
+	 * @return array
+	 * @since 3.0.242
+	 * 
+	 */
+	public function getPageInfo() {
+		return $this->pageInfo;
+	}
 	
 	/**
 	 * Update/get page for given user
@@ -574,9 +593,15 @@ class PagesRequest extends Wire {
 		}
 
 		$maxUrlDepth = $config->maxUrlDepth;
-		if($maxUrlDepth > 0 && substr_count($it, '/') > $config->maxUrlDepth) {
-			$this->setResponseCode(414, 'Request URL exceeds max depth set in $config->maxUrlDepth');
-			return false;
+		if($maxUrlDepth > 0 && substr_count($it, '/') > $maxUrlDepth) {
+			if(in_array($config->longUrlResponse, [ 302, 301 ])) {
+				$parts = array_slice(explode('/', $it), 0, $maxUrlDepth);
+				$it = '/' . trim(implode('/', $parts), '/') . '/';
+				$this->setRedirectPath($it, $config->longUrlResponse);
+			} else {
+				$this->setResponseCode($config->longUrlResponse, 'Request URL exceeds max depth set in $config->maxUrlDepth');
+				return false;
+			}
 		}
 
 		if(!isset($it[0]) || $it[0] != '/') $it = "/$it";
@@ -710,7 +735,7 @@ class PagesRequest extends Wire {
 	 * @return string|Page|null Login page object or string w/redirect URL, null if 404
 	 * 
 	 */
-	public function ___getLoginPageOrUrl(Page $page = null) {
+	public function ___getLoginPageOrUrl(?Page $page = null) {
 		
 		$config = $this->wire()->config;
 

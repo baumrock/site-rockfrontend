@@ -5,7 +5,7 @@
  *
  * Matches selector strings to pages
  * 
- * ProcessWire 3.x, Copyright 2024 by Ryan Cramer
+ * ProcessWire 3.x, Copyright 2025 by Ryan Cramer
  * https://processwire.com
  *
  * Hookable methods: 
@@ -1860,7 +1860,15 @@ class PageFinder extends Wire {
 					$q->set('joinType', $joinType);
 					$q->bindOption('global', true); // ensures bound value key are globally unique
 					$q->bindOption('prefix', 'pf'); // pf=PageFinder
-					
+			
+					/*	@todo To be implemented after 3.0.245
+					if(strpos($subfields, 'JSON.') === 0) {
+						if($this->getMatchQueryJSON($q, $tableAlias, $subfields, $selector->operator, $value)) {
+							continue;
+						}
+					}
+					*/
+						
 					$q = $fieldtype->getMatchQuery($q, $tableAlias, $subfield, $selector->operator, $value);
 					$q->copyTo($query, array('select', 'join', 'leftjoin', 'orderby', 'groupby')); 
 					$q->copyBindValuesTo($query);
@@ -1979,6 +1987,22 @@ class PageFinder extends Wire {
 		$this->finalSelectors = $selectors;
 		
 		return $query; 
+	}
+
+	/**
+	 * Get match query when data is stored in a JSON DB column (future use)
+	 * 
+	 * @param PageFinderDatabaseQuerySelect DatabaseQuerySelect $q
+	 * @param string $tableAlias
+	 * @param string $subfields
+	 * @param string $operator
+	 * @param string|int|array $value
+	 * @return bool
+	 * 
+	 */
+	protected function getMatchQueryJSON(DatabaseQuerySelect $q, $tableAlias, $subfields, $operator, $value) {
+		// @todo to be implemented after 3.0.245
+		return false;
 	}
 
 	/**
@@ -3587,10 +3611,11 @@ class PageFinder extends Wire {
 		if(count($fields) > 1) {
 			// OR fields present
 			array_shift($fields);
-			$subfields = array($subfields);
+			$subfields = array($subfields); // 1. subfields is definitely an array…
 			foreach($fields as $name) {
 				if(strpos($name, "$fieldName.") === 0) {
-					list(,$name) = explode('__owner.', $name); 	
+					list(,$name) = explode('__owner.', $name);
+					/** @var array $subfields 2. …but PhpStorm in PHP8 mode can't tell it's an array without this */
 					$subfields[] = $name;
 				} else {
 					$this->syntaxError(
@@ -3662,7 +3687,7 @@ class PageFinder extends Wire {
 	 * @return array
 	 * 
 	 */
-	public function getPageArrayData(PageArray $pageArray = null) {
+	public function getPageArrayData(?PageArray $pageArray = null) {
 		if($pageArray !== null && count($this->pageArrayData)) {
 			$pageArray->data($this->pageArrayData); 
 		}

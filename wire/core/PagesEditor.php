@@ -27,7 +27,7 @@ class PagesEditor extends Wire {
 	 * 
 	 */
 	protected $pages;
-
+	
 	/**
 	 * Construct
 	 * 
@@ -815,6 +815,11 @@ class PagesEditor extends Wire {
 			if($page->templatePrevious) $this->pages->templateChanged($page);
 			if(in_array('status', $changes)) $this->pages->statusChanged($page);
 		}
+		
+		if($triggerAddedPage && $page->rootParent()->id === $this->wire()->config->trashPageID) {
+			// new page created directly in trash, not a great way to start but that's how it is
+			$this->savePageStatus($page, Page::statusTrash);
+		}
 
 		$this->pages->debugLog('save', $page, true);
 
@@ -938,6 +943,90 @@ class PagesEditor extends Wire {
 	}
 
 	/**
+	 * Save multiple named fields from given page 
+	 * 
+	 * ~~~~~
+	 * // you can specify field names as array…
+	 * $a = $pages->saveFields($page, [ 'title', 'body', 'summary' ]);
+	 * 
+	 * // …or a CSV string of field names:
+	 * $a = $pages->saveFields($page, 'title, body, summary');
+	 *
+	 * // return value is array of saved field/property names 
+	 * print_r($a); // outputs: array( 'title', 'body', 'summary' )
+	 * ~~~~~
+	 * 
+	 * @param Page $page Page to save
+	 * @param array|string|string[]|Field[] $fields Array of field names to save or CSV/space separated field names to save.
+	 *   These should only be Field names and not native page property names.
+	 * @param array|string $options Optionally specify one or more of the following to modify default behavior:
+	 *  - `quiet` (boolean): Specify true to bypass updating of modified user and time (default=false).
+	 *  - `noHooks` (boolean): Prevent before/after save hooks (default=false), please also use $pages->___saveField() for call.
+	 *  - See $options argument for Pages::save() for additional options
+	 * @return array Array of saved field names (may also include property names if they were modified)
+	 * @throws WireException
+	 * @since 3.0.242
+	 * 
+	 */
+	public function saveFields(Page $page, $fields, array $options = array()) {
+
+		$saved = array();
+		$quiet = !empty($options['quiet']);
+		$noHooks = !empty($options['noHooks']);
+
+		// do not update modified user/time until last save
+		if(!$quiet) $options['quiet'] = true;
+
+		if(!is_array($fields)) {
+			$fields = explode(' ', str_replace(',', ' ', "$fields"));
+		}
+
+		foreach($fields as $key => $field) {
+			$field = trim("$field");
+			if(empty($field) || !$page->hasField($field)) unset($fields[$key]);
+		}
+
+		// save each field
+		foreach($fields as $field) {
+			if($noHooks) {
+				$success = $this->saveField($page, $field, $options);
+			} else {
+				$success = $this->pages->saveField($page, $field, $options);
+			}
+			if($success) {
+				$saved[$field] = $field;
+				$page->untrackChange($field);
+			}
+		}
+
+		if($quiet) {
+			// do not save native properties or update page modified-user/modified
+			
+		} else {
+			// finish by saving the page without fields
+			$options['quiet'] = false;
+		
+			foreach($page->getChanges() as $name) {
+				if($page->hasField($name)) continue;
+				// add only changed native properties to saved list
+				$saved[$name] = $name; 
+			}
+			
+			$options['noFields'] = true;
+			
+			if($noHooks) {
+				$this->save($page, $options);
+			} else {
+				$this->pages->save($page, $options);
+			}
+		}
+		
+		$this->pages->debugLog('saveFields', "$page:" . implode(',', $fields), $saved);
+
+		return $saved;
+	}
+
+	/**
 	 * Silently add status flag to a Page and save
 	 * 
 	 * This action does not update the Page modified date. 
@@ -984,7 +1073,7 @@ class PagesEditor extends Wire {
 	 * 
 	 */
 	public function saveStatus(Page $page) {
-		return $this->savePageStatus($page, $page->status) > 0;
+		return $this->savePageStatus($page, $page->status, false, 2) > 0;
 	}
 
 	/**
@@ -1010,29 +1099,34 @@ class PagesEditor extends Wire {
 		$database = $this->wire()->database;
 		$rowCount = 0;
 		$multi = is_array($pageID) || $pageID instanceof PageArray;
+		$page = $pageID instanceof Page ? $pageID : null;
 		$status = (int) $status;
 		
 		if($status < 0 || $status > Page::statusMax) {
 			throw new WireException("status must be between 0 and " . Page::statusMax);
 		}
 
-		$sql = "UPDATE pages SET status=";
+		$sqlUpdate = "UPDATE pages SET status=";
 	
 		if($remove === 2) {
 			// overwrite status (internal/undocumented)
-			$sql .= "status=$status";
+			$sqlUpdate .= "status=$status";
+			if($page instanceof Page) $page->status = $status;
 		} else if($remove) {
 			// remove status
-			$sql .= "status & ~$status";
+			$sqlUpdate .= "status & ~$status";
+			if($page instanceof Page) $page->removeStatus($status);
 		} else {
 			// add status
-			$sql .= "status|$status";
+			$sqlUpdate .= "status|$status";
+			if($page instanceof Page) $page->addStatus($status);
 		}
 		
 		if($multi && $recursive) {
 			// multiple page IDs combined with recursive option, must be handled individually
 			foreach($pageID as $id) {
-				$rowCount += $this->savePageStatus((int) "$id", $status, $recursive, $remove);
+				$id = $id instanceof Page ? $id : (int) "$id";
+				$rowCount += $this->savePageStatus($id, $status, $recursive, $remove);
 			}
 			// exit early in this case
 			return $rowCount; 
@@ -1044,15 +1138,17 @@ class PagesEditor extends Wire {
 				$id = (int) "$id";
 				if($id > 0) $ids[$id] = $id;
 			}
-			if(!count($ids)) $ids[] = 0;
-			$query = $database->prepare("$sql WHERE id IN(" . implode(',', $ids) . ")");
-			$database->execute($query);
-			return $query->rowCount();
+			if(count($ids)) {
+				$query = $database->prepare("$sqlUpdate WHERE id IN(" . implode(',', $ids) . ")");
+				$database->execute($query);
+				$rowCount = $query->rowCount();
+			}
+			return $rowCount;
 			
 		} else {
 			// single page ID or Page object
 			$pageID = (int) "$pageID";
-			$query = $database->prepare("$sql WHERE id=:page_id");
+			$query = $database->prepare("$sqlUpdate WHERE id=:page_id");
 			$query->bindValue(":page_id", $pageID, \PDO::PARAM_INT);
 			$database->execute($query);
 			$rowCount = $query->rowCount();
@@ -1062,12 +1158,13 @@ class PagesEditor extends Wire {
 		
 		// recursive mode assumed from this point forward
 		$parentIDs = array($pageID);
+		$ids = [];
 
 		do {
 			$parentID = array_shift($parentIDs);
 
 			// update all children to have the same status
-			$query = $database->prepare("$sql WHERE parent_id=:parent_id");
+			$query = $database->prepare("$sqlUpdate WHERE parent_id=:parent_id");
 			$query->bindValue(":parent_id", $parentID, \PDO::PARAM_INT);
 			$database->execute($query);
 			$rowCount += $query->rowCount();
@@ -1087,18 +1184,24 @@ class PagesEditor extends Wire {
 			
 			/** @noinspection PhpAssignmentInConditionInspection */
 			while($row = $query->fetch(\PDO::FETCH_ASSOC)) {
-				$parentIDs[] = (int) $row['id'];
+				$id = (int) $row['id'];
+				$parentIDs[$id] = $id;
+				$ids[$id] = $id;
 			}
 			
 			$query->closeCursor();
 			
 		} while(count($parentIDs));
 		
+		if(count($ids)) {
+			$rowCount += $this->savePageStatus($ids, $status, false, $remove);
+		}
+
 		return $rowCount;
 	}
 	
 	/**
-	 * Permanently delete a page and it's fields.
+	 * Permanently delete a page and its fields.
 	 *
 	 * Unlike trash(), pages deleted here are not restorable.
 	 *
@@ -1121,19 +1224,35 @@ class PagesEditor extends Wire {
 			'uncacheAll' => false, 
 			'recursive' => is_bool($recursive) ? $recursive : false,
 			// internal use properties:
-			'_level' => 0,
+			// internal recursion level: incremented only by delete operations initiated by this method
+			'_level' => 0, 
+			// internal delete branch: Page object when deleting a branch
 			'_deleteBranch' => false,
 		);
+
+		// page IDs for all delete operations, cleared out once no longer recursive
+		static $deleted = array(); 
+		
+		// external recursion level: all recursive delete operations including those initiated from hooks
+		static $level = 0; 
 
 		if(is_array($recursive)) $options = $recursive; 	
 		$options = array_merge($defaults, $options);
 
+		// check if page already deleted in a recursive call 
+		if(isset($deleted[$page->id])) {
+			// page already deleted, return result from that call
+			return $options['recursive'] ? $deleted[$page->id] : true;
+		}
+
 		$this->isDeleteable($page, true); // throws WireException
+		
 		$numDeleted = 0;
 		$numChildren = $page->numChildren;
 		$deleteBranch = false;
+		$level++;
 
-		if($numChildren) {
+		if($numChildren) try {
 			if(!$options['recursive']) {
 				throw new WireException("Can't delete Page $page because it has one or more children.");
 			}
@@ -1144,17 +1263,21 @@ class PagesEditor extends Wire {
 			}
 			foreach($page->children('include=all') as $child) {
 				/** @var Page $child */
+				if(isset($deleted[$child->id])) continue;
 				$options['_level']++;
 				$result = $this->pages->delete($child, true, $options);
 				$options['_level']--;
 				if(!$result) throw new WireException("Error doing recursive page delete, stopped by page $child");
 				$numDeleted += $result;
 			}
+		} catch(\Exception $e) {
+			$level = 0;
+			$deleted = array();
+			throw $e;
 		}
 
 		// trigger a hook to indicate delete is ready and WILL occur
 		$this->pages->deleteReady($page, $options);
-
 		$this->clear($page);
 		
 		$database = $this->wire()->database;
@@ -1165,10 +1288,20 @@ class PagesEditor extends Wire {
 		$this->pages->sortfields()->delete($page);
 		$page->setTrackChanges(false);
 		$page->status = Page::statusDeleted; // no need for bitwise addition here, as this page is no longer relevant
-		$this->pages->deleted($page, $options);
 		$numDeleted++;
+		$deleted[$page->id] = $numDeleted;
+		$this->pages->deleted($page, $options);
+		
 		if($deleteBranch) $this->pages->deletedBranch($page, $options, $numDeleted);
 		if($options['uncacheAll']) $this->pages->uncacheAll($page);
+		
+		if($level > 0) $level--;
+		if($level < 1) {
+			// back at root call, reset all tracking
+			$deleted = array();
+			$level = 0;
+		}
+		
 		$this->pages->debugLog('delete', $page, true);
 
 		return $options['recursive'] ? $numDeleted : true;
@@ -1178,7 +1311,7 @@ class PagesEditor extends Wire {
 	 * Clone an entire page (including fields, file assets, and optionally children) and return it.
 	 *
 	 * @param Page $page Page that you want to clone
-	 * @param Page $parent New parent, if different (default=same parent)
+	 * @param Page|null $parent New parent, if different (default=same parent)
 	 * @param bool $recursive Clone the children too? (default=true)
 	 * @param array|string $options Optional options that can be passed to clone or save
 	 * 	- forceID (int): force a specific ID
@@ -1188,7 +1321,7 @@ class PagesEditor extends Wire {
 	 * @throws WireException|\Exception on fatal error
 	 *
 	 */
-	public function _clone(Page $page, Page $parent = null, $recursive = true, $options = array()) {
+	public function _clone(Page $page, ?Page $parent = null, $recursive = true, $options = array()) {
 		
 		$defaults = array(
 			'forceID' => 0, 

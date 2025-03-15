@@ -92,6 +92,18 @@ class PagesLoaderCache extends Wire {
 	}
 
 	/**
+	 * Is given page ID in the cache?
+	 * 
+	 * @param int page ID
+	 * @return bool
+	 * @since 3.0.243
+	 * 
+	 */
+	public function hasCache($id) {
+		return isset($this->pageIdCache[$id]);
+	}
+
+	/**
 	 * Cache the given page.
 	 *
 	 * @param Page $page
@@ -149,13 +161,13 @@ class PagesLoaderCache extends Wire {
 	/**
 	 * Remove all pages from the cache
 	 *
-	 * @param Page $page Optional Page that initiated the uncacheAll
+	 * @param Page|null $page Optional Page that initiated the uncacheAll
 	 * @param array $options Additional options to modify behavior:
 	 *   - `shallow` (bool): By default, this method also calls $page->uncache(). To prevent call to $page->uncache(), set 'shallow' => true.
 	 * @return int Number of pages uncached
 	 *
 	 */
-	public function uncacheAll(Page $page = null, array $options = array()) {
+	public function uncacheAll(?Page $page = null, array $options = array()) {
 
 		if($page) {} // to ignore unused parameter inspection
 		$user = $this->wire()->user;

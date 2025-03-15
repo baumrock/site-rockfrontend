@@ -90,7 +90,7 @@
  * 
  * #pw-body
  * 
- * ProcessWire 3.x, Copyright 2023 by Ryan Cramer
+ * ProcessWire 3.x, Copyright 2024 by Ryan Cramer
  * https://processwire.com
  *
  * @link https://processwire.com/api/variables/sanitizer/ Offical $sanitizer API variable Documentation
@@ -239,6 +239,17 @@ class Sanitizer extends Wire {
 	);
 
 	/**
+	 * Characters blacklisted from UTF-8 page names
+	 * 
+	 * @var string[] 
+	 * 
+	 */
+	protected $pageNameBlacklist = array(
+		'/', '\\', '%', '"', "'", '<', '>', '?', '!', '#', '@', ':', ';', ',', 
+		'+', '=', '*', '^', '$', '(', ')', '[', ']', '{', '}', '|', '&',
+	);
+
+	/**
 	 * Sanitizer method names (A-Z) and type(s) they return 
 	 * 
 	 * a: array
@@ -366,8 +377,6 @@ class Sanitizer extends Wire {
 	 */
 	public function nameFilter($value, array $allowedExtras, $replacementChar, $beautify = false, $maxLength = 128) {
 		
-		static $replacements = array();
-
 		if(!is_string($value)) $value = $this->string($value);
 		$allowed = array_merge($this->allowedASCII, $allowedExtras); 
 		$needsWork = strlen(str_replace($allowed, '', $value));
@@ -376,27 +385,30 @@ class Sanitizer extends Wire {
 		if($beautify && $needsWork) {
 			if($beautify === self::translate && $this->multibyteSupport) {
 				$value = mb_strtolower($value);
+				$replacements = array();
 
-				if(empty($replacements)) {
+				if(empty($this->caches['nameFilterReplace'])) {
 					$modules = $this->wire()->modules;
 					if($modules) {
-						$configData = $this->wire()->modules->getModuleConfigData('InputfieldPageName');
-						$replacements = empty($configData['replacements']) ? InputfieldPageName::$defaultReplacements : $configData['replacements'];
+						$replacements = $this->wire()->modules->getConfig('InputfieldPageName', 'replacements');
+						if(empty($replacements)) $replacements = InputfieldPageName::$defaultReplacements;
+						$this->caches['nameFilterReplace'] = $replacements;
 					}
+				} else {
+					$replacements = $this->caches['nameFilterReplace']; 
 				}
-
-				foreach($replacements as $from => $to) {
-					if(mb_strpos($value, $from) !== false) {
-						$value = mb_eregi_replace($from, $to, $value);
-					}
+			
+				if(count($replacements)) {
+					$value = str_replace(array_keys($replacements), array_values($replacements), $value);
+					$needsWork = strlen(str_replace($allowed, '', $value));
 				}
 			}
 
-			if(function_exists("\\iconv")) {
+			if($needsWork && function_exists("\\iconv")) {
 				$v = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $value);
 				if($v) $value = $v;
+				$needsWork = strlen(str_replace($allowed, '', $value));
 			}
-			$needsWork = strlen(str_replace($allowed, '', $value)); 
 		}
 
 		if(strlen($value) > $maxLength) $value = substr($value, 0, $maxLength); 
@@ -776,7 +788,8 @@ class Sanitizer extends Wire {
 	 *  - `Sanitizer::okUTF8` (constant): Allow UTF-8 characters to appear in path (implied if $config->pageNameCharset is 'UTF8'). 
 	 * @param int|array $maxLength Maximum number of characters allowed in the name.
 	 *  You may also specify the $options array for this argument instead. 
-	 * @param array $options Array of options to modify default behavior. See Sanitizer::name() method for available options. 
+	 * @param array $options Array of options to modify default behavior. See Sanitizer::name() method for available options, plus:
+	 *  - `punycodeVersion` (int): Punycode version to use with UTF-8 page names, see Sanitizer::getPunycodeVersion() method for details.
 	 * @return string
 	 * @see Sanitizer::name()
 	 *
@@ -787,7 +800,8 @@ class Sanitizer extends Wire {
 		if(!strlen($value)) return '';
 		
 		$defaults = array(
-			'charset' => $this->wire()->config->pageNameCharset
+			'charset' => $this->wire()->config->pageNameCharset,
+			'punycodeVersion' => 0, 
 		);
 		
 		if(is_array($beautify)) {
@@ -819,19 +833,26 @@ class Sanitizer extends Wire {
 				&& !ctype_alnum(str_replace(array('-', '_', '.'), '', $value)) 
 				&& strpos($value, 'xn-') !== 0) {
 				
+				$tt = $this->getTextTools();
+				$max = $maxLength;
+				
 				do {
 					// encode value
-					$value = $this->punyEncodeName($_value);
+					$value = $this->punyEncodeName($_value, $options['punycodeVersion']);
 					// if result stayed within our allowed character limit, then good, we're done
 					if(strlen($value) <= $maxLength) break;
 					// continue loop until encoded value is equal or less than allowed max length
-					$_value = substr($_value, 0, strlen($_value) - 1);
+					$_value = $tt->substr($_value, 0, $max--);
 				} while(true);
 				
 				// if encode was necessary and successful, return with no further processing
 				if(strpos($value, 'xn-') === 0) {
 					return $value;
 				} else {
+					if(strlen($value) && ctype_alnum(str_replace(array('-', '_', '.'), '', $value))) {
+						if($this->getPunycodeVersion($options['punycodeVersion']) > 1) return $value;
+					}
+						
 					// can't be encoded, send to regular name sanitizer
 					$value = $_value;
 				}
@@ -842,7 +863,7 @@ class Sanitizer extends Wire {
 			$beautify = self::okUTF8;
 			if(strpos($value, 'xn-') === 0) {
 				// found something to convert
-				$value = $this->punyDecodeName($value);
+				$value = $this->punyDecodeName($value, $options['punycodeVersion']);
 				// now it will run through okUTF8
 			}
 		}
@@ -893,6 +914,7 @@ class Sanitizer extends Wire {
 		if(!strlen($value)) return '';
 		
 		$config = $this->wire()->config;
+		$keepGoing = true;
 		
 		// if UTF8 module is not enabled then delegate this call to regular pageName sanitizer
 		if($config->pageNameCharset != 'UTF8') return $this->pageName($value, false, $maxLength);
@@ -908,7 +930,8 @@ class Sanitizer extends Wire {
 		// whitelist of allowed characters and blacklist of disallowed characters
 		$whitelist = $config->pageNameWhitelist;
 		if(!strlen($whitelist)) $whitelist = false;
-		$blacklist = '/\\%"\'<>?#@:;,+=*^$()[]{}|&';
+		
+		$value = str_replace($this->pageNameBlacklist, '-', $value);
 		
 		// we let regular pageName handle chars like these, if they appear without other UTF-8
 		$extras = array('.', '-', '_', ',', ';', ':', '(', ')', '!', '?', '&', '%', '$', '#', '@');
@@ -923,43 +946,48 @@ class Sanitizer extends Wire {
 			if($this->caches[$k] || $tt->strtolower($value) === $value) {
 				// whitelist supports only lowercase OR value is all lowercase 
 				// let regular pageName sanitizer handle this
-				return $this->pageName($value, false, $maxLength);
+				$value = $this->pageName($value, false, $maxLength);
+				// maintain old behavior for existing installations
+				if($this->getPunycodeVersion() < 2) return $value; 
+				$keepGoing = false;
 			}
 		}
 
-		// validate that all characters are in our whitelist
-		$replacements = array();
+		if($keepGoing) {
+			// validate that all characters are in our whitelist
+			$replacements = array();
 
-		for($n = 0; $n < $tt->strlen($value); $n++) {
-			$c = $tt->substr($value, $n, 1);
-			$inBlacklist = $tt->strpos($blacklist, $c) !== false || strpos($blacklist, $c) !== false;
-			$inWhitelist = !$inBlacklist && $whitelist !== false && $tt->strpos($whitelist, $c) !== false;
-			if($inWhitelist && !$inBlacklist) {
-				// in whitelist
-			} else if($inBlacklist || !strlen(trim($c)) || ctype_cntrl($c)) {
-				// character does not resolve to something visible or is in blacklist
-				$replacements[] = $c;
-			} else if($whitelist === false) {
-				// whitelist disabled: allow everything that is not blacklisted
-			} else {
-				// character that is not in whitelist, double check case variants
-				$cLower = $tt->strtolower($c);
-				$cUpper = $tt->strtoupper($c);
-				if($cLower !== $c && $tt->strpos($whitelist, $cLower) !== false) {
-					// allow character and convert to lowercase variant
-					$value = $tt->substr($value, 0, $n) . $cLower . $tt->substr($value, $n+1);
-				} else if($cUpper !== $c && $tt->strpos($whitelist, $cUpper) !== false) {
-					// allow character and convert to uppercase varient
-					$value = $tt->substr($value, 0, $n) . $cUpper . $tt->substr($value, $n+1);
-				} else {
-					// queue character to be replaced
+			for($n = 0; $n < $tt->strlen($value); $n++) {
+				$c = $tt->substr($value, $n, 1);
+				if($c === '-') continue;
+				$inWhitelist = $whitelist !== false && $tt->strpos($whitelist, $c) !== false;
+				if($inWhitelist) {
+					// in whitelist
+				} else if(!strlen(trim($c)) || ctype_cntrl($c)) {
+					// character does not resolve to something visible 
 					$replacements[] = $c;
+				} else if($whitelist === false) {
+					// whitelist disabled: allow everything that is not blacklisted
+				} else {
+					// character that is not in whitelist, double check case variants
+					$cLower = $tt->strtolower($c);
+					$cUpper = $tt->strtoupper($c);
+					if($cLower !== $c && $tt->strpos($whitelist, $cLower) !== false) {
+						// allow character and convert to lowercase variant
+						$value = $tt->substr($value, 0, $n) . $cLower . $tt->substr($value, $n + 1);
+					} else if($cUpper !== $c && $tt->strpos($whitelist, $cUpper) !== false) {
+						// allow character and convert to uppercase variant
+						$value = $tt->substr($value, 0, $n) . $cUpper . $tt->substr($value, $n + 1);
+					} else {
+						// queue character to be replaced
+						$replacements[] = $c;
+					}
 				}
 			}
-		}
 
-		// replace disallowed characters with "-"
-		if(count($replacements)) $value = str_replace($replacements, '-', $value);
+			// replace disallowed characters with "-"
+			if(count($replacements)) $value = str_replace($replacements, '-', $value);
+		}
 		
 		// replace doubled word separators
 		foreach($separators as $c) {
@@ -980,36 +1008,51 @@ class Sanitizer extends Wire {
 	 * Decode a PW-punycode'd name value
 	 * 
 	 * @param string $value
+	 * @param int $version 0=auto-detect, 1=original/buggy, 2=punycode library, 3=php idn function
 	 * @return string
 	 * 
 	 */
-	protected function punyDecodeName($value) {
+	protected function punyDecodeName($value, $version = 0) {
 		// exclude values that we know can't be converted
 		if(strlen($value) < 4 || strpos($value, 'xn-') !== 0) return $value;
+		$version = $this->getPunycodeVersion($version);
 		
 		if(strpos($value, '__')) {
+			// as used by punycode version 1 to split long strings
 			$_value = $value;
 			$parts = explode('__', $_value);
 			foreach($parts as $n => $part) {
-				$parts[$n] = $this->punyDecodeName($part);
+				$parts[$n] = $this->punyDecodeName($part, $version);
 			}
 			$value = implode('', $parts);
 			return $value; 
 		}
 		
 		$_value = $value; 
+		
 		// convert "xn-" single hyphen to recognized punycode "xn--" double hyphen
 		if(strpos($value, 'xn--') !== 0) $value = 'xn--' . substr($value, 3);
-		if(function_exists('idn_to_utf8')) {
-			// use native php function if available
-			$value = @idn_to_utf8($value);
-		} else {
-			// otherwise use Punycode class
+		
+		if($version >= 3) {
+			// PHP IDN function
+			// 32=IDNA_NONTRANSITIONAL_TO_UNICODE
+			$info = array();
+			$value = idn_to_utf8($value, 32, INTL_IDNA_VARIANT_UTS46, $info); 
+			if(empty($value)) $value = $info['result'];
+			
+		} else if($version === 2) {
+			// Punycode library
 			$pc = new Punycode();
 			$value = $pc->decode($value);
+			
+		} else {
+			// PHP IDN with old/buggy behavior post PHP 7.4
+			$value = @idn_to_utf8($value);
 		}
+		
 		// if utf8 conversion failed, restore original value
 		if($value === false || !strlen($value)) $value = $_value;
+		
 		return $value;
 	}
 
@@ -1017,41 +1060,92 @@ class Sanitizer extends Wire {
 	 * Encode a name value to PW-punycode
 	 * 
 	 * @param string $value
+	 * @param int $version 0=auto-detect, 1=original/buggy, 2=punycode library, 3=php idn function
 	 * @return string
 	 * 
 	 */
-	protected function punyEncodeName($value) {
-		// exclude values that don't need to be converted
-		if(strpos($value, 'xn-') === 0) return $value;
-		if(ctype_alnum(str_replace(array('.', '-', '_'), '', $value))) return $value;
+	protected function punyEncodeName($value, $version = 0) {
+		
 		$tt = $this->getTextTools();
+		$version = $this->getPunycodeVersion($version);
+		
+		if(strpos($value, 'xn-') === 0) {
+			if(ctype_alnum(str_replace(array('.', '-', '_'), '', $value))) {
+				return $value;
+			}
+		}
+
+		if($version > 1) {
+			$whitelist = $this->wire()->config->pageNameWhitelist;
+			$value = str_replace($this->pageNameBlacklist, '-', $value);
+			$v = '';
+			for($n = 0; $n < $tt->strlen($value); $n++) {
+				$c = $tt->substr($value, $n, 1);
+				if($tt->stripos($whitelist, $c) === false) {
+					$c = $this->pageName($c, self::translate);
+					if(empty($c) || $tt->stripos($whitelist, $c) === false) {
+						$c = '-';
+					}
+				}
+				$v .= $c;
+			}
+			while(strpos($v, '--') !== false) $v = str_replace('--', '-', $v);
+			$value = $tt->trim($v, '-');
+		}
+		
+		if(ctype_alnum(str_replace(array('.', '-', '_'), '', $value))) {
+			$value = $this->pageName(trim($value), true);
+			return $value;
+		}
 
 		while(strpos($value, '__') !== false) {
 			$value = str_replace('__', '_', $value);
 		}
-		
-		if(strlen($value) >= 50) {
+
+		if($version > 1) {
+			// version 2, 3
+			while(strpos($value, '--') !== false) {
+				$value = str_replace('--', '-', $value);
+			}
+			$value = trim($value, '-');
+			
+		} else if(strlen($value) >= 50) {
+			// version 1
 			$_value = $value;
 			$parts = array();
 			while(strlen($_value)) {
 				$part = $tt->substr($_value, 0, 12);
 				$_value = $tt->substr($_value, 12);
-				$parts[] = $this->punyEncodeName($part);
+				$parts[] = $this->punyEncodeName($part, $version);
 			}
 			$value = implode('__', $parts);
-			return $value; 
+			return $value;
 		}
-		
+
 		$_value = $value;
-		
-		if(function_exists("idn_to_ascii")) {
-			// use native php function if available
-			$value = substr(@idn_to_ascii($value), 3);
-		} else {
-			// otherwise use Punycode class
+
+		if($version >= 3) {
+			// PHP 7.4+ idn_to_ascii
+			$info = array();
+			// 16=IDNA_NONTRANSITIONAL_TO_ASCII
+			idn_to_ascii($value, 16, INTL_IDNA_VARIANT_UTS46, $info); 
+			// IDN return value fails on longer strings, but populates result correctly
+			$value = $info['result'];
+			
+		} else if($version === 2) {
+			// Punycode library
 			$pc = new Punycode();
-			$value = substr($pc->encode($value), 3);
+			$value = $pc->encode($value);
+			
+		} else {
+			// buggy behavior in PHP 7.4+ but pages may already be present with it
+			// INTL_IDNA_VARIANT_2003 is default prior to PHP 7.4
+			// substr() is also not right here but kept for v1 compatibility
+			$value = substr(@idn_to_ascii($value), 3);
 		}
+		
+		if(strpos($value, 'xn-') === 0) $value = substr($value, 3);
+		
 		if(strlen($value) && $value !== '-') {
 			// in PW the xn- prefix has one fewer hyphen than in native Punycode
 			// for compatibility with pageName sanitization and beautification
@@ -1061,7 +1155,44 @@ class Sanitizer extends Wire {
 			// return value is always ascii
 			$value = $this->name($_value);
 		}
+		
 		return $value;
+	}
+	
+	/**
+	 * Get internal Punycode version to use
+	 *
+	 * 0: Auto-detect from current environment.
+	 * 1: PHP IDN function used by all PW versions prior to 3.0.244, but buggy PHP 7.4+.
+	 * 2: Dedicated Punycode PHP library (no known issues at present).
+	 * 3: PHP IDN function call updated for PHP 7.4+ (default in new installations after January 2025).
+	 *
+	 * @param int $version
+	 * @return int 1=PHP DN but buggy after PHP 7.4+, 2=Punycode library, 3=PHP IDN function PHP 7.4+
+	 * @since 3.0.244
+	 *
+	 */
+	protected function getPunycodeVersion($version = 0) {
+		$config = $this->wire()->config;
+		if(!$version) {
+			$whitelist = $config->pageNameWhitelist;
+			for($n = 3; $n > 0; $n--) {
+				if(strpos($whitelist, "v$n") !== false) $version = $n;
+				if($version) break;
+			}
+		}
+		if(!$version) $version = $config->installedAfter('2025-01-10') ? 3 : 1;
+		if(!function_exists('idn_to_utf8')) $version = 2;
+		if($version >= 3 && version_compare(phpversion(), '7.4.0', '<')) $version = 2;
+		return $version;
+	}
+
+	/**
+	 * @return Punycode
+	 * 
+	 */
+	protected function punycode() {
+		return new Punycode();
 	}
 
 	/**
@@ -1994,7 +2125,14 @@ class Sanitizer extends Wire {
 				$value = preg_replace('!</li>\s*<li!is', "$options[separator]<li", $value);
 			}
 		}
-	
+
+		// replace single less than sign that's not accompanied with a greater than sign
+		// to something that looks like it, but that strip_tags() won’t strip.
+		// this is to prevent something like "5<10" from getting converted to "5"
+		if(strpos($value, '<') !== false && strpos($value, '>') === false) {
+			$value = preg_replace('/<([\w\d])/', '≺$1', $value);
+		}
+		
 		// remove tags
 		$value = trim(strip_tags($value));
 
@@ -2374,7 +2512,7 @@ class Sanitizer extends Wire {
 
 		} else {
 			// domain contains utf8
-			$pc = function_exists("idn_to_ascii") ? false : new Punycode();
+			$pc = function_exists("idn_to_ascii") ? false : $this->punycode();
 			$domain = $pc ? $pc->encode($domain) : @idn_to_ascii($domain);
 			if($domain === false || !strlen($domain)) return '';
 			$url = $scheme . $domain . $rest;
@@ -4442,6 +4580,7 @@ class Sanitizer extends Wire {
 	 * 	- `delimiter` (string): Single delimiter to use to identify CSV strings. Overrides the 'delimiters' option when specified (default=null)
 	 * 	- `delimiters` (array): Delimiters to identify CSV strings. First found delimiter will be used, default=array("|", ",")
 	 * 	- `enclosure` (string): Enclosure to use for CSV strings (default=double quote, i.e. `"`)
+	 * 	- `escape` (string): Escape to use for CSV strings (default=backslash, i.e. "\\")
 	 * @return array
 	 * @throws WireException if an unknown $sanitizer method is given
 	 *
@@ -4457,6 +4596,7 @@ class Sanitizer extends Wire {
 			'delimiter' => null, 
 			'delimiters' => array('|', ','),
 			'enclosure' => '"',
+			'escape' => "\\", 
 			'trim' => true, 
 			'sanitizer' => null, 
 			'keySanitizer' => null,
@@ -4495,7 +4635,7 @@ class Sanitizer extends Wire {
 						}
 					}
 					if($hasDelimiter !== null) {
-						$value = str_getcsv($value, $hasDelimiter, $options['enclosure']);
+						$value = str_getcsv($value, $hasDelimiter, $options['enclosure'], $options['escape']);
 					} else {
 						$value = array($value);
 					}
@@ -5188,7 +5328,7 @@ class Sanitizer extends Wire {
 	 * @param string|int|array|float $value
 	 * @param int $maxLength Maximum length (default=128)
 	 * @param null|int $maxBytes Maximum allowed bytes (used for string types only)
-	 * @return array|bool|float|int|string
+	 * @return array|float|int|string
 	 * @since 3.0.125
 	 * @see Sanitizer::minLength()
 	 * 

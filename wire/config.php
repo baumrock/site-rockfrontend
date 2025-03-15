@@ -12,7 +12,7 @@
  * You may also make up your own configuration options by assigning them 
  * in /site/config.php 
  * 
- * ProcessWire 3.x, Copyright 2022 by Ryan Cramer
+ * ProcessWire 3.x, Copyright 2025 by Ryan Cramer
  * https://processwire.com
  *
  * 
@@ -524,6 +524,18 @@ $config->sessionHistory = 0;
 $config->userAuthHashType = 'sha1';
 
 /**
+ * Enable output formatting for current $user API variable at boot?
+ * 
+ * EXPERIMENTAL: May not be compatible with with all usages, so if setting to `true` 
+ * then be sure to test thoroughly on anything that works with $user API variable. 
+ * 
+ * @var bool
+ * @since 3.0.241
+ * 
+ */
+$config->userOutputFormatting = false;
+
+/**
  * Names (string) or IDs (int) of roles that are not allowed to login
  *
  * Note that you must create these roles yourself in the admin. When a user has
@@ -973,7 +985,7 @@ $config->protectCSRF = true;
  * @var int
  *
  */
-$config->maxUrlSegments = 4;
+$config->maxUrlSegments = 20;
 
 /**
  * Maximum length for any individual URL segment (default=128)
@@ -992,7 +1004,23 @@ $config->maxUrlSegmentLength = 128;
  * @var int
  * 
  */
-$config->maxUrlDepth = 30; 
+$config->maxUrlDepth = 30;
+
+/**
+ * Long URL response (URL depth, length or segments overflow)
+ *
+ * HTTP code that ProcessWire should respond with when it receives more URL segments,
+ * more URL depth, or longer URL length than what is allowed. Suggested values:
+ *
+ * - `404`: Page not found
+ * - `301`: Redirect to closest allowed URL (permanent)
+ * - `302`: Redirect to closest allowed URL (temporary)
+ *
+ * @var int
+ * @since 3.0.243
+ *
+ */
+$config->longUrlResponse = 404;
 
 /**
  * Pagination URL prefix
@@ -1036,6 +1064,14 @@ $config->pageNameCharset = 'ascii';
  * If 'pageNameCharset' is 'UTF8' then specify the whitelist of allowed characters here
  * 
  * Please note this whitelist is only used if pageNameCharset is 'UTF8'. 
+ * 
+ * If your ProcessWire version is 3.0.244+ AND your installation date was before 10 Jan 2025, 
+ * AND you are enabling UTF8 page names now, please add the text `v3` (without the quotes) 
+ * at the beginning or end of your pageNameWhitelist. This will ensure that it uses a 
+ * newer/better UTF-8 page name conversion. The older version is buggy on PHP versions 7.4+, 
+ * but is used for existing installations so as not to unexpectedly change any existing page 
+ * names. When a new ProcessWire installation occurs after 5 Jan 2025 it automatically uses 
+ * the newer/better version and does not require anything further. 
  * 
  * @var string
  * 

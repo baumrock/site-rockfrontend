@@ -879,7 +879,7 @@ class Field extends WireData implements Saveable, Exportable {
 	 * @return bool True if viewable, false if not
 	 * 
 	 */
-	public function ___viewable(Page $page = null, User $user = null) {
+	public function ___viewable(?Page $page = null, ?User $user = null) {
 		return $this->wire()->fields->_hasPermission($this, 'view', $page, $user);
 	}
 
@@ -893,12 +893,12 @@ class Field extends WireData implements Saveable, Exportable {
 	 * 
 	 * #pw-group-access
 	 *
-	 * @param Page|string|int|null $page Optionally specify a Page for context
-	 * @param User|string|int|null $user Optionally specify a different user (default = current user)
+	 * @param Page|null $page Optionally specify a Page for context
+	 * @param User|null $user Optionally specify a different user (default = current user)
 	 * @return bool
 	 *
 	 */
-	public function ___editable(Page $page = null, User $user = null) {
+	public function ___editable(?Page $page = null, ?User $user = null) {
 		return $this->wire()->fields->_hasPermission($this, 'edit', $page, $user);
 	}
 	
@@ -1065,7 +1065,7 @@ class Field extends WireData implements Saveable, Exportable {
 			foreach(array('showIf', 'requiredIf') as $depType) {
 				$theIf = $inputfield->getSetting($depType);
 				if(empty($theIf)) continue;
-				$theIf = preg_replace('/([_.|a-zA-Z0-9]+)([=!%*<>]+)/', '$1' . $contextStr . '$2', $theIf);
+				$theIf = preg_replace('/([_|a-zA-Z0-9]+)*([-._|a-zA-Z0-9]*)([=!%*<>]+)/', '$1' . $contextStr . '$2$3', $theIf);
 				if(stripos($theIf, 'forpage.') !== false) {
 					// de-contextualize if the field name starts with 'forpage.' as used by 
 					// repeaters (or others) referring to page in editor rather than item page
@@ -1248,7 +1248,9 @@ class Field extends WireData implements Saveable, Exportable {
 			$table = $this->setTable;
 		} else {
 			$name = $this->settings['name'];
-			if(!strlen($name)) throw new WireException("Field 'name' is required");
+			$length = strlen($name);
+			if(!$length) throw new WireException("Field 'name' is required");
+			if($length > 58) $name = substr($name, 0, 58); // 'field_' + 58 = 64 max
 			$table = self::tablePrefix . $name;
 		}
 		if(self::$lowercaseTables) $table = strtolower($table); 
@@ -1265,6 +1267,7 @@ class Field extends WireData implements Saveable, Exportable {
 	 */
 	public function setTable($table = null) {
 		$table = empty($table) ? '' : $this->wire()->sanitizer->fieldName($table);
+		if(strlen($table) > 64) $table = substr($table, 0, 64);
 		$this->setTable = $table;
 	}
 

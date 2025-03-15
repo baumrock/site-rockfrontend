@@ -605,10 +605,10 @@ class Page extends WireData implements \Countable, WireMatchable {
 	/**
 	 * Create a new page in memory. 
 	 *
-	 * @param Template $tpl Template object this page should use. 
+	 * @param Template|null $tpl Template object this page should use. 
 	 *
 	 */
-	public function __construct(Template $tpl = null) {
+	public function __construct(?Template $tpl = null) {
 		parent::__construct();
 		if($tpl !== null) {
 			$tpl->wire($this);
@@ -1167,6 +1167,58 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 */
 	protected function getFieldSubfieldValue($key) {
 		return $this->values()->getDotValue($this, $key);
+	}
+
+	/**
+	 * Preload multiple fields together as a group (experimental)
+	 * 
+	 * This is an optimization that enables you to load the values for multiple fields into
+	 * a page at once, and often in a single query. For fields where it is supported, and
+	 * for cases where you have a lot of fields to load at once, it can be up to 50% faster 
+	 * than the default of lazy-loading fields. 
+	 * 
+	 * To use, call `$page->preload([ 'field1', 'field2', 'etc.' ])` before accessing 
+	 * `$page->field1`, `$page->field2`, etc.
+	 *
+	 * The more fields you give this method, the more performance improvement it can offer.
+	 * As a result, don't bother if with only a few fields, as it's less likely to make 
+	 * a difference at small scale. You will also see a more measurable benefit if preloading
+	 * fields for lots of pages at once. 
+	 * 
+	 * Preload works with some Fieldtypes and not others. For details on what it is doing,
+	 * specify `true` for the `debug` option which will make it return array of what it
+	 * loaded and what it didn't. Have a look at this array with TracyDebugger or output
+	 * a print_r() call on it, and the result is self explanatory. 
+	 * 
+	 * NOTE: This function is currently experimental, recommended for testing only. 
+	 * 
+	 * ~~~~~
+	 * // Example usage
+	 * $page->preload([ 'headline', 'body', 'sidebar', 'intro', 'summary' ]);
+	 * echo "
+	 *   <h1 id='headline'>$page->headline</h1>"; 
+	 *   <div id='intro'>$page->intro</div>
+	 *   <div id='body'>$page->body</div>
+	 *   <aside id='sidebar' pw-append>$page->sidebar</aside>
+	 *   <meta id='meta-description'>$page->summary</meta>
+	 * ";
+	 * ~~~~~
+	 *
+	 * @param array $fieldNames Names of fields to preload or omit (or blank array) 
+	 *   to preload all supported fields. 
+	 * @param array $options Options to modify default behavior:
+	 * - `debug` (bool): Specify true to return additional info in returned array (default=false). 
+	 * - See the `PagesLoader::preloadFields()` method for additional options.
+	 * @return array Array of details 
+	 * @since 3.0.243
+	 *
+	 */
+	public function preload(array $fieldNames = array(), $options = array()) {
+		if(empty($fieldNames)) {
+			return $this->wire()->pages->loader()->preloadAllFields($this, $options);
+		} else {
+			return $this->wire()->pages->loader()->preloadFields($this, $fieldNames, $options);
+		}
 	}
 
 	/**
@@ -2143,7 +2195,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 * @return Page|NullPage Returns the next sibling page, or a NullPage if none found. 
 	 *
 	 */
-	public function next($selector = '', PageArray $siblings = null) {
+	public function next($selector = '', ?PageArray $siblings = null) {
 		if($selector instanceof PageArray) {
 			$siblings = $selector;
 			$selector = '';
@@ -2200,7 +2252,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 * @return PageArray
 	 *
 	 */
-	public function nextUntil($selector = '', $filter = '', PageArray $siblings = null) {
+	public function nextUntil($selector = '', $filter = '', ?PageArray $siblings = null) {
 		if($siblings === null && $this->traversalPages) $siblings = $this->traversalPages;
 		if($siblings) return $this->traversal()->nextUntilSiblings($this, $selector, $filter, $siblings); 
 		return $this->traversal()->nextUntil($this, $selector, $filter); 
@@ -2224,7 +2276,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 * @return Page|NullPage Returns the previous sibling page, or a NullPage if none found. 
 	 *
 	 */
-	public function prev($selector = '', PageArray $siblings = null) {
+	public function prev($selector = '', ?PageArray $siblings = null) {
 		if($selector instanceof PageArray) {
 			$siblings = $selector;
 			$selector = '';
@@ -2263,7 +2315,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 * @return PageArray
 	 *
 	 */
-	public function prevUntil($selector = '', $filter = '', PageArray $siblings = null) {
+	public function prevUntil($selector = '', $filter = '', ?PageArray $siblings = null) {
 		if($siblings === null && $this->traversalPages) $siblings = $this->traversalPages;
 		if($siblings) return $this->traversal()->prevUntilSiblings($this, $selector, $filter, $siblings);
 		return $this->traversal()->prevUntil($this, $selector, $filter); 
@@ -2350,7 +2402,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 	 * @param array $options See Pages::save() documentation for options. You may also specify $options as the first argument if no $field is needed.
 	 * @return bool Returns true on success false on fail
 	 * @throws WireException on database error
-	 * @see Pages::save(), Pages::saveField(), Pages::saveReady(), Pages::saveFieldReady(), Pages::saved(), Pages::fieldSaved()
+	 * @see Pages::save(), Page::saveFields(), Pages::saveField(), Pages::saveReady(), Pages::saveFieldReady(), Pages::saved(), Pages::fieldSaved()
 	 *
 	 */
 	public function save($field = null, array $options = array()) {
@@ -2375,6 +2427,21 @@ class Page extends WireData implements \Countable, WireMatchable {
 		$options['noFields'] = true; 
 		
 		return $pages->save($this, $options);
+	}
+
+	/**
+	 * Save only the given named fields for this page
+	 * 
+	 * @param array|string $fields Array of field name(s) or string (CSV or space separated)
+	 * @param array $options See Pages::save() documentation for options.
+	 * @return array Names of fields that were saved
+	 * @throws WireException on database error
+	 * @see Page::save()
+	 * @since 3.0.242
+	 * 
+	 */
+	public function saveFields($fields, array $options = array()) {
+		return $this->wire()->pages->saveFields($this, $fields, $options);
 	}
 	
 	/**
@@ -2427,6 +2494,7 @@ class Page extends WireData implements \Countable, WireMatchable {
 		if($of) $this->of(false);
 		foreach($values as $k => $v) {
 			$this->set($k, $v);
+			if(!$property) $this->trackChange($k);
 		}
 		if($property) {
 			$result = $this->save($property, $options);

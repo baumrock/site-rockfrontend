@@ -86,13 +86,13 @@ class InputfieldText extends Inputfield {
 	/**
 	 * Render ready
 	 * 
-	 * @param Inputfield $parent
+	 * @param Inputfield|null $parent
 	 * @param bool $renderValueMode
 	 * @return bool
 	 * @throws WireException
 	 * 
 	 */
-	public function renderReady(Inputfield $parent = null, $renderValueMode = false) {
+	public function renderReady(?Inputfield $parent = null, $renderValueMode = false) {
 		$showCount = (int) $this->getSetting('showCount');
 		if($showCount) {
 			$this->addClass('InputfieldTextLength');
@@ -166,7 +166,7 @@ class InputfieldText extends Inputfield {
 		if(!empty($attrs['placeholder']) && $this->wire()->languages) {
 			$language = $this->wire()->user->language;
 			if($language && $language->id && !$language->isDefault()) {
-				$placeholder = parent::get("placeholder$language->id"); 
+				$placeholder = (string) parent::get("placeholder$language->id"); 
 				if(strlen($placeholder)) $attrs['placeholder'] = $placeholder;
 			}
 		}
@@ -229,6 +229,7 @@ class InputfieldText extends Inputfield {
 	 * 
 	 */
 	protected function getValueLength($value, $countWords = false) {
+		$value = (string) $value;
 		if($countWords) {
 			return str_word_count($value); 
 		} else {

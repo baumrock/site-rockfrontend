@@ -403,18 +403,16 @@ class ProcessPageEdit extends Process implements WirePageEditor, ConfigurableMod
 		
 		if(in_array($this->input->urlSegment1, array('navJSON', 'bookmarks'))) return;
 	
-		$getID = $this->input->get('id');
-		if($getID === 'bookmark') {
-			$this->session->redirect('./bookmarks/');
-			return;
-		}
-		$getID = (int) $getID;
+		$getID = (int) $this->input->get('id');
 		$postID = (int) $this->input->post('id');
 		$id = abs($postID ? $postID : $getID); 
 
-		if(!$id) {
-			$this->session->location('./bookmarks/');
-			throw new Wire404Exception($this->noticeUnknown, Wire404Exception::codeSecondary); // Init error: no page provided
+		if(!$id || $this->input->get('id') === 'bookmark' || $this->input->urlSegment2 === 'bookmarks') {
+			// Init error: no page provided
+			if($this->wire()->process === $this) {
+				$this->session->location($this->wire()->page->url . 'bookmarks/');
+			} 
+			throw new Wire404Exception($this->noticeUnknown, Wire404Exception::codeSecondary); 
 		}
 
 		$this->page = $this->loadPage($id); 
@@ -1048,11 +1046,17 @@ class ProcessPageEdit extends Process implements WirePageEditor, ConfigurableMod
 	
 			if($this->page->addable() || $this->page->numChildren) $form->append($this->buildFormChildren()); 
 			if(!$this->page->template->noSettings && $this->useSettings) $form->append($this->buildFormSettings()); 
+			
 			if($this->isTrash && !$this->isPost) {
-				$this->message($this->_("This page is in the Trash"));
-				$tabRestore = $this->buildFormRestore();
-				if($tabRestore) $form->append($tabRestore);
+				if($this->page->rootParent()->id != $this->config->trashPageID) {
+					$this->warning($this->_('This page incorrectly has trash status, please “save” to fix it'));
+				} else {
+					$this->message($this->_('This page is in the Trash'));
+					$tabRestore = $this->buildFormRestore();
+					if($tabRestore) $form->append($tabRestore);
+				}
 			}
+			
 			$tabDelete = $this->buildFormDelete();
 			if($tabDelete->children()->count()) $form->append($tabDelete);
 			if($this->page->viewable() && !$this->requestModal) $this->buildFormView($this->getViewUrl()); 
@@ -2567,6 +2571,11 @@ class ProcessPageEdit extends Process implements WirePageEditor, ConfigurableMod
 			}
 		}
 		
+		if(($value & Page::statusTrash) && $this->page->rootParent()->id != $this->config->trashPageID) {
+			$value = $value & ~Page::statusTrash;
+			$this->message($this->_('Removed trash status'));
+		}
+
 		$this->page->status = $value; 
 		
 		return true; 
@@ -3345,14 +3354,14 @@ class ProcessPageEdit extends Process implements WirePageEditor, ConfigurableMod
 			} else {
 				$title = (string) $title;
 			}
-			if(empty($title)) {
+			if(!strlen("$title")) {
 				if($this->pages->names()->isUntitledPageName($page->name)) {
 					$title = $page->template->getLabel();
 				} else {
 					$title = $page->get('name');
 				}
 			}
-			if(empty($title)) $title = $page->name;
+			if(!strlen("$title")) $title = $page->name;
 		} else if($this->parent && $this->parent->id) {
 			$titlePage = $this->parent;
 			$title = rtrim($this->parent->path, '/') . '/[...]';
@@ -3380,7 +3389,7 @@ class ProcessPageEdit extends Process implements WirePageEditor, ConfigurableMod
 			$headline = $titlePage->get('title|name');
 		}
 	
-		if(empty($headline)) $headline = $title;
+		if(!strlen("$headline")) $headline = $title;
 
 		$this->headline($headline);
 		$this->browserTitle($browserTitle);

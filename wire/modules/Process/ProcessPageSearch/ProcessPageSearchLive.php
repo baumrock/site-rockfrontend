@@ -7,6 +7,7 @@
  * @method renderItem(array $item, $prefix = 'pw-search', $class = 'list')
  * @method string|array execute($getJSON = true)
  * @method bool findCustom(array $data)
+ * @method array getDefaultPageSearchFields()
  * 
  * @todo support searching repeaters
  * 
@@ -161,11 +162,11 @@ class ProcessPageSearchLive extends Wire {
 	/**
 	 * Construct
 	 *
-	 * @param Process|ProcessPageSearch $process
+	 * @param ProcessPageSearch|null $process
 	 * @param array $liveSearch
 	 * 
 	 */
-	public function __construct(Process $process = null, array $liveSearch = array()) {
+	public function __construct(?Process $process = null, array $liveSearch = array()) {
 		
 		if($process) {
 			$process->wire($this);
@@ -261,6 +262,7 @@ class ProcessPageSearchLive extends Wire {
 		
 		$q = empty($presets['q']) ? $input->get('q') : $presets['q'];
 		if(empty($q)) $q = $input->get('admin_search'); // legacy name
+		$q = (string) $q;
 		if(strpos($q, '~@') !== false) $q = str_replace('~@', '', $q); // disallow placeholder prefix
 		if(empty($operator)) $q = str_replace(array_keys($opHolders), array_values($opHolders), $q);
 		$q = $sanitizer->text($q, array('reduceSpace' => true));
@@ -380,7 +382,7 @@ class ProcessPageSearchLive extends Wire {
 			$selectors[] = $property . $operator . $value;
 		} else {
 			// we did not recognize the property, so use field(s) defined in module instead
-			$selectors[] = implode('|', $this->defaultPageSearchFields) . $operator . $value;
+			$selectors[] = implode('|', $this->getDefaultPageSearchFields()) . $operator . $value;
 		}
 
 		$help = strtolower($q) === 'help';
@@ -1324,6 +1326,28 @@ class ProcessPageSearchLive extends Wire {
 			$this->addResult($group, $example, '', array('subtitle' => $summary));
 		}
 		return true;
+	}
+
+	/**
+	 * Get the names of fields that should be used when searching pages
+	 * 
+	 * Hook this from /site/templates/admin.php to modify what gets searched. 
+	 * This overrides the setting specified interactively in the ProcessPageSearch module settings. 
+	 * 
+	 * ~~~~~
+	 * $wire->addHookAfter('ProcessPageSearchLive::getDefaultPageSearchFields', function(HookEvent $e) {
+	 *   $e->return = [ 'title', 'subtitle', 'categories.title' ];
+	 * }); 
+	 * ~~~~~
+	 * 
+	 * #pw-hooker
+	 * 
+	 * @return array
+	 * @since 3.0.242
+	 * 
+	 */
+	public function ___getDefaultPageSearchFields() {
+		return $this->defaultPageSearchFields;
 	}
 
 }

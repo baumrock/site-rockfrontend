@@ -126,6 +126,7 @@ final class DeferredContent
 			__DIR__ . '/../assets/toggle.js',
 			__DIR__ . '/../assets/table-sort.js',
 			__DIR__ . '/../assets/tabs.js',
+			__DIR__ . '/../assets/helpers.js',
 			__DIR__ . '/../Dumper/assets/dumper.js',
 			__DIR__ . '/../BlueScreen/assets/bluescreen.js',
 		]);
@@ -144,7 +145,7 @@ final class DeferredContent
 
 		if(Debugger::$customJsStr) $str .= Debugger::$customJsStr;
 
-		if(Debugger::$customBodyStr) $str .= "(function(){var el = document.createElement('div'); el.className='tracy-debug'; el.innerHTML='".preg_replace('#\s+#u', ' ', Debugger::$customBodyStr)."'; document.body.appendChild(el);})();\n";
+		if(Debugger::$customBodyStr) $str .= "(function(){var el = document.createElement('div'); el.className='tracy-debug'; el.innerHTML='".preg_replace('#\s+#u', ' ', Debugger::$customBodyStr)."'; document.addEventListener('DOMContentLoaded', function() { document.body.appendChild(el);});})();\n";
 
 		return $str;
 	}
