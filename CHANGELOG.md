@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/baumrock/site-rockfrontend/compare/v1.6.2...v1.6.3) (2025-03-16)
+
+
+### Bug Fixes
+
+* add rockpagebuilder assets to _main.latte ([d1425a1](https://github.com/baumrock/site-rockfrontend/commit/d1425a17c15ffc2b4759bb72cbaa7edabe350c62))
+
 ## [1.6.2](https://github.com/baumrock/site-rockfrontend/compare/v1.6.1...v1.6.2) (2025-03-16)
 
 
@@ -27,18 +34,4 @@
 ### Features
 
 * update livereload.php ([92bb7ab](https://github.com/baumrock/site-rockfrontend/commit/92bb7aba6dbd211107b6ee97df2a62f48da33dc6))
-
-## [1.4.0](https://github.com/baumrock/site-rockfrontend/compare/v1.3.2...v1.4.0) (2025-01-26)
-
-
-### Features
-
-* update assets and config ([08a91b1](https://github.com/baumrock/site-rockfrontend/commit/08a91b1dcc9666404db3302272148b4ee6371081))
-* update site profile to use rockdevtools ([f724b65](https://github.com/baumrock/site-rockfrontend/commit/f724b658874f0afc4aabdddc14c7b6d4bd716a98))
-* use new scriptTag() and styleTag() methods ([6888628](https://github.com/baumrock/site-rockfrontend/commit/68886282cc89f01eed7cd409454ea23eb0826554))
-
-
-### Bug Fixes
-
-* remove default defer attribute ([eb1a5c6](https://github.com/baumrock/site-rockfrontend/commit/eb1a5c62177c29e740bfd387bc64d5c4eb1d1560))
 
