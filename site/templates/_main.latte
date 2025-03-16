@@ -7,6 +7,10 @@
   {* NOTE: styles.min.css & scripts.min.js are generated in _init.php via RockDevTools *}
   {rockfrontend()->styleTag('/site/templates/dst/styles.min.css')|noescape}
   {rockfrontend()->scriptTag('/site/templates/dst/scripts.min.js', 'defer')|noescape}
+
+  {* ROCKPAGEBUILDER *}
+  {* {rockfrontend()->assets()|noescape} *}
+  {* {rockpagebuilder()->assets()|noescape} *}
 </head>
 <body>
   {rockfrontend()->toolbar()|noescape}
