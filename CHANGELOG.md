@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/baumrock/site-rockfrontend/compare/v1.6.1...v1.6.2) (2025-03-16)
+
+
+### Bug Fixes
+
+* add sortable attribute for rockpagebuilder demo ([33cbc8c](https://github.com/baumrock/site-rockfrontend/commit/33cbc8cc65703d32cbe7788eb4cc24f5e2ff8289))
+
 ## [1.6.1](https://github.com/baumrock/site-rockfrontend/compare/v1.6.0...v1.6.1) (2025-03-16)
 
 
@@ -34,12 +41,4 @@
 ### Bug Fixes
 
 * remove default defer attribute ([eb1a5c6](https://github.com/baumrock/site-rockfrontend/commit/eb1a5c62177c29e740bfd387bc64d5c4eb1d1560))
-
-## [1.3.2](https://github.com/baumrock/site-rockfrontend/compare/v1.3.1...v1.3.2) (2024-10-09)
-
-
-### Bug Fixes
-
-* missing "not" in docs ([85b3864](https://github.com/baumrock/site-rockfrontend/commit/85b38646a295317a7b9f4a2ee84640be329d19cd))
-* rename gitignore in finish.php ([6b0c438](https://github.com/baumrock/site-rockfrontend/commit/6b0c438cd5295b6bb32ed4f4111c583559dc5506))
 
