@@ -1,7 +1,7 @@
 <hr>
 <div class="uk-container uk-section-small">
   <h3>RockPageBuilder Quickstart</h3>
-  <div class='uk-margin-top'>
+  <div class='uk-margin-top' sortable>
     {if wire()->modules->isInstalled('RockPageBuilder')}
       {rockpagebuilder()->render(true)}
     {else}
