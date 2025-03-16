@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/baumrock/site-rockfrontend/compare/v1.6.0...v1.6.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* remove rockpagebuilder page from DB ([bdeebb6](https://github.com/baumrock/site-rockfrontend/commit/bdeebb632e32906c83cff0c8c6484f60e8d95198))
+
 ## [1.6.0](https://github.com/baumrock/site-rockfrontend/compare/v1.5.0...v1.6.0) (2025-03-15)
 
 
@@ -35,11 +42,4 @@
 
 * missing "not" in docs ([85b3864](https://github.com/baumrock/site-rockfrontend/commit/85b38646a295317a7b9f4a2ee84640be329d19cd))
 * rename gitignore in finish.php ([6b0c438](https://github.com/baumrock/site-rockfrontend/commit/6b0c438cd5295b6bb32ed4f4111c583559dc5506))
-
-## [1.3.1](https://github.com/baumrock/site-rockfrontend/compare/v1.3.0...v1.3.1) (2024-09-27)
-
-
-### Bug Fixes
-
-* wrong path for autoload docs ([9e818cf](https://github.com/baumrock/site-rockfrontend/commit/9e818cf51991154de160110181591dafa05f3f18))
 
